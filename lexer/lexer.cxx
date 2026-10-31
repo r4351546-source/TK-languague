@@ -131,3 +131,38 @@ token lexer::readOperator() {
         std::string_view(src.data() + start, current - start)};
 }
 
+token lexer::readIdentifier() {
+    while(
+        std::isalnum(static_cast<unsigned char>(peek())) || 
+        peek() == '_' 
+    ) {
+        advance();
+    }
+    std::string_view lexeme(
+        src.data() + start, current - start
+    );
+    tokenType type = tokenType::IDENTIFIER;
+    if(lexeme == "if") {
+        type = tokenType::IF;
+    }
+    else if(lexeme == "elseif") {
+        type = tokenType::ELIF;
+    }
+    else if(lexeme == "else") {
+        type = tokenType::ELSE;
+    }
+    else if(lexeme == "int") {
+        type == tokenType::INTEGER;
+    }
+    else if(lexeme == "char") {
+        type = tokenType::CHAR;
+    }
+    else if(lexeme == "float") {
+        type = tokenType::FLOAT;
+    }
+    else if(lexeme == "bool") {
+        type = tokenType::BOOL;
+    }
+    
+        return {type, lexeme};
+}
