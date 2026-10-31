@@ -131,6 +131,7 @@ token lexer::readOperator() {
         std::string_view(src.data() + start, current - start)};
 }
 
+
 token lexer::readIdentifier() {
     while(
         std::isalnum(static_cast<unsigned char>(peek())) || 
@@ -166,3 +167,47 @@ token lexer::readIdentifier() {
     
         return {type, lexeme};
 }
+
+bool lexer::match(char expect) {
+     if (current >= src.size()) {
+        return false;
+    }
+
+    if (peek() != expect) {
+        return false;
+    }
+
+    advance();
+    return true;
+}
+
+token lexer::readNumber() {
+    bool isFloat = false;
+
+    while(std::isdigit(static_cast<unsigned char>(peek()))) {
+        advance();
+    }
+
+    if(peek() == '.' &&
+       current + 1 < src.size() &&
+       std::isdigit(static_cast<unsigned char>(src[current + 1]))) {
+
+        isFloat = true;
+        advance();
+
+        while(std::isdigit(static_cast<unsigned char>(peek()))) {
+            advance();
+        }
+    }
+
+    std::string_view lexeme(
+        src.data() + start,
+        current - start
+    );
+
+    return {
+        isFloat ? tokenType::FLOAT : tokenType::INTEGER,
+        lexeme
+    };
+}
+

@@ -64,7 +64,7 @@ class lexer {
     char peek();    //дивиться на символ без переміщення
     void skipWhitespace(); 
     void skipcomment();
-    void match();
+    bool match(char expect);
     token readIdentifier();
     token readNumber();
     token readOperator();
