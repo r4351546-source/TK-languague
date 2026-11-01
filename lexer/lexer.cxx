@@ -1,4 +1,5 @@
 #include "lexer.hxx"
+#include "../file/file.hxx"
 #include <cctype>
 
 char lexer::advance() {
@@ -256,3 +257,8 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
     addToken(tokenType::eof, std::string_view());
     return tokens;
 }
+
+
+std::vector<token> lexer::getFileLexer(const std::string& path) {
+    std::string source = file::readFile(path);
+    return mainlexer(source);

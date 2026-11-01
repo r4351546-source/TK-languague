@@ -78,5 +78,6 @@ class lexer {
 
     public:
     std::vector<token> mainlexer(const std::string& source);
+    std::vector<token> getFileLexer(const std::string& path);
    
 };
