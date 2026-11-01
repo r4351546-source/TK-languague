@@ -74,7 +74,7 @@ class lexer {
     std::size_t current = 0;
     std::size_t start = 0;    
 
-    void addToken(tokenType type, std::string value);
+    void addToken(tokenType type, std::string_view value);
 
     public:
     std::vector<token> mainlexer(const std::string& source);

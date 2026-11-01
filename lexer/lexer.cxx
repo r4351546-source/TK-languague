@@ -153,7 +153,7 @@ token lexer::readIdentifier() {
         type = tokenType::ELSE;
     }
     else if(lexeme == "int") {
-        type == tokenType::INTEGER;
+        type = tokenType::INTEGER;
     }
     else if(lexeme == "char") {
         type = tokenType::CHAR;
@@ -211,3 +211,48 @@ token lexer::readNumber() {
     };
 }
 
+
+void lexer::addToken(tokenType type, std::string_view value) {
+    tokens.push_back({type, value});
+}
+
+
+std::vector<token> lexer::mainlexer(const std::string& source) {
+    src = source;
+    tokens.clear();
+    current = 0;
+    start = 0;
+
+    while(current < src.size()) {
+        start = current;
+        char c = advance();
+
+        if(std::isspace(static_cast<unsigned char>(c))) {
+            skipWhitespace();
+            continue;
+        }
+
+        if(std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
+            token identifierToken = readIdentifier();
+            addToken(identifierToken.TokenType, identifierToken.lexeme);
+            continue;
+        }
+
+        if(std::isdigit(static_cast<unsigned char>(c))) {
+            token numberToken = readNumber();
+            addToken(numberToken.TokenType, numberToken.lexeme);
+            continue;
+        }
+
+        token operatorToken = readOperator();
+        if(operatorToken.TokenType != tokenType::invalid) {
+            addToken(operatorToken.TokenType, operatorToken.lexeme);
+            continue;
+        }
+
+        addToken(tokenType::invalid, std::string_view(src.data() + start, current - start));
+    }
+
+    addToken(tokenType::eof, std::string_view());
+    return tokens;
+}
