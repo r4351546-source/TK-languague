@@ -262,3 +262,4 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
 std::vector<token> lexer::getFileLexer(const std::string& path) {
     std::string source = file::readFile(path);
     return mainlexer(source);
+}
