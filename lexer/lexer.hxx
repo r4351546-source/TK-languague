@@ -29,16 +29,22 @@ enum class tokenType {
     GREATEREQUAL,//>=  
 
     //variables
-    INTEGER,
-    FLOAT,
-    CHAR,
-    BOOL,
+    INTEGERTYPE,
+    FLOATTYPE,
+    CHARTYPE,
+    BOOLTYPE,
+
+    INTEGER_LITERAL,
+    FLOAT_LITERAL,
     
     //conditions
     IF,
     ELIF,
     ELSE,
 
+    //cycles
+    WHILE,
+    
     //other
     semicolon,   //semicolon — ;
     leftparen,   //leftparen — (

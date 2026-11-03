@@ -153,17 +153,20 @@ token lexer::readIdentifier() {
     else if(lexeme == "else") {
         type = tokenType::ELSE;
     }
+    else if(lexeme == "while") {
+        type = tokenType::WHILE;
+    }
     else if(lexeme == "int") {
-        type = tokenType::INTEGER;
+        type = tokenType::INTEGERTYPE;
     }
     else if(lexeme == "char") {
-        type = tokenType::CHAR;
+        type = tokenType::CHARTYPE;
     }
     else if(lexeme == "float") {
-        type = tokenType::FLOAT;
+        type = tokenType::FLOATTYPE;
     }
     else if(lexeme == "bool") {
-        type = tokenType::BOOL;
+        type = tokenType::BOOLTYPE;
     }
     
         return {type, lexeme};
@@ -207,7 +210,7 @@ token lexer::readNumber() {
     );
 
     return {
-        isFloat ? tokenType::FLOAT : tokenType::INTEGER,
+        isFloat ? tokenType::FLOAT_LITERAL : tokenType::INTEGER_LITERAL,
         lexeme
     };
 }
