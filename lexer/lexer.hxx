@@ -45,7 +45,7 @@ enum class tokenType {
     //cycles
     WHILE,
     FOR,
-    
+
     //other
     semicolon,   //semicolon — ;
     leftparen,   //leftparen — (
@@ -53,6 +53,8 @@ enum class tokenType {
     leftbrace,   //leftbrace — {
     rightbrace,   //rightbrace — }
     invalid,
+    Return,     //return
+    comma,
     eof
 };
 

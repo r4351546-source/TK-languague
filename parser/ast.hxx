@@ -29,3 +29,68 @@ struct UnaryExpr : Expr {
     token op;
     ExprPtr right;
 };
+
+struct groupingExpr : Expr {
+    ExprPtr expression;
+};
+
+struct assignmentExpr : Expr {
+    token name;
+    ExprPtr value;
+};
+
+struct callExpr : Expr {
+    ExprPtr callee;
+    std::vector<ExprPtr> arguments;
+};
+
+
+//instructs
+struct stmt {
+    virtual ~stmt() = default;
+};
+
+using stmtptr = std::unique_ptr<stmt>;
+
+struct Blockstmt : stmt {
+    std::vector<stmtptr> statements;
+};
+
+struct Ifstmt : stmt {
+    ExprPtr condition;
+    stmtptr thenBranch;
+    stmtptr elseBranch;
+};
+
+struct varDeclStmt /*приклад: int x = 5;*/ : stmt {
+    token name;
+    token type;
+    ExprPtr initializer;
+};
+
+struct whileStmt : stmt/*while(....) {....}*/ {
+    ExprPtr condition;
+    stmtptr body;
+};
+
+struct forStmt : stmt/*for(....) {....}*/ {
+    stmtptr initializer;
+    ExprPtr condition;
+    ExprPtr increment;
+    stmtptr body;
+};
+
+struct returnstmt : stmt/*return ....;*/ {
+    ExprPtr value;
+};
+
+struct fnstmt : stmt {
+    token name;
+    token returnType;
+    std::vector<token> parameters;
+    std::vector<stmtptr> body;
+};
+
+struct program {
+    std::vector<stmtptr> statements;
+};

@@ -111,6 +111,10 @@ token lexer::readOperator() {
             return {tokenType::semicolon,
                 std::string_view(src.data() + start, current - start)};
 
+        case ',':
+            return {tokenType::comma,
+                std::string_view(src.data() + start, current - start)};
+                
         case '(':
             return {tokenType::leftparen,
                 std::string_view(src.data() + start, current - start)};
@@ -167,6 +171,9 @@ token lexer::readIdentifier() {
     }
     else if(lexeme == "float") {
         type = tokenType::FLOATTYPE;
+    }
+    else if(lexeme == "return") {
+        type = tokenType::Return;
     }
     else if(lexeme == "bool") {
         type = tokenType::BOOLTYPE;
