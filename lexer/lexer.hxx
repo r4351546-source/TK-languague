@@ -44,6 +44,7 @@ enum class tokenType {
 
     //cycles
     WHILE,
+    FOR,
     
     //other
     semicolon,   //semicolon — ;
