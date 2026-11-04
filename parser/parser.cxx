@@ -29,7 +29,7 @@ ExprPtr parser::assignment() {
         ExprPtr value = assignment();
 
         if (auto varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
-            auto assignExpr = std::make_unique<AssignExpr>();
+            auto assignExpr = std::make_unique<assignmentExpr>();
             assignExpr->name = varExpr->name;
             assignExpr->value = std::move(value);
             return assignExpr;
