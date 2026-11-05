@@ -2,6 +2,7 @@
 #include "stdexcept"
 #include <utility>
 
+
 token parser::previous() {
     return tokens[current - 1];
 }
@@ -14,10 +15,39 @@ bool parser::isAtEnd() {
     return peek().TokenType == tokenType::eof;
 }
 
+bool parser::match(tokenType type) {
+    if (check(type)) {
+        advance();
+        return true;
+    }
+    return false;
+}
+
 
 token parser::advance() {
     if (!isAtEnd()) current++;
     return previous();
+}
+
+ExprPtr parser::equality() {
+    ExprPtr expr = comparison();
+
+    while (match(tokenType::EQUAL) ||
+           match(tokenType::NOTEQUAL)) {
+
+        token op = previous();
+        ExprPtr right = comparison();
+
+        auto binary = std::make_unique<BinaryExpr>();
+
+        binary->left = std::move(expr);
+        binary->op = op;
+        binary->right = std::move(right);
+
+        expr = std::move(binary);
+    }
+
+    return expr;
 }
 
 
