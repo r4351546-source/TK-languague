@@ -12,14 +12,14 @@ private:
     std::size_t current = 0;
 
     // Navigation
-    token advance();
-    token peek();
-    token previous();
+    token advance();    //done
+    token peek();       //done
+    token previous();   //done
 
-    bool check(tokenType type);
-    bool match(tokenType type);
+    bool check(tokenType type); //done
+    bool match(tokenType type); //done
     token consume(tokenType type);
-    bool isAtEnd();
+    bool isAtEnd();//done
 
     // Declarations
     stmtptr declaration();
@@ -36,15 +36,15 @@ private:
     stmtptr expressionStatement();
 
     // Expressions
-    ExprPtr expression();
-    ExprPtr assignment();
-    ExprPtr equality();
-    ExprPtr comparison();
-    ExprPtr term();
-    ExprPtr factor();
-    ExprPtr unary();
+    ExprPtr expression();   //done
+    ExprPtr assignment();   //done
+    ExprPtr equality();     //done
+    ExprPtr comparison();   //done
+    ExprPtr term();         //done
+    ExprPtr factor();       //done
+    ExprPtr unary();  
     ExprPtr call();
-    ExprPtr primary();
+    ExprPtr primary();      //done
 
 public:
     parser(std::vector<token> tokens);

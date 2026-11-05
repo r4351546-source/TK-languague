@@ -28,11 +28,35 @@ bool parser::match(tokenType type) {
     return false;
 }
 
+
+
 bool parser::check(tokenType type) {
     if (isAtEnd()) return false;
     return peek().TokenType == type;
 }
 
+
+
+ExprPtr parser::term() {
+    ExprPtr expr = factor();
+
+    while (match(tokenType::PLUS) || match(tokenType::MINUS)) {
+        token op = previous();
+        ExprPtr right = factor();
+
+        auto binary = std::make_unique<BinaryExpr>();
+
+        binary->left = std::move(expr);
+        binary->op = op;
+        binary->right = std::move(right);
+
+        expr = std::move(binary);
+    }
+
+    return expr;
+
+
+}
 ExprPtr parser::comparison() {
     ExprPtr expr = term();
 
