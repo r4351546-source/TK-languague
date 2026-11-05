@@ -15,6 +15,11 @@ bool parser::isAtEnd() {
     return peek().TokenType == tokenType::eof;
 }
 
+token parser::advance() {
+    if (!isAtEnd()) current++;
+    return previous();
+}
+
 bool parser::match(tokenType type) {
     if (check(type)) {
         advance();
@@ -23,10 +28,32 @@ bool parser::match(tokenType type) {
     return false;
 }
 
+bool parser::check(tokenType type) {
+    if (isAtEnd()) return false;
+    return peek().TokenType == type;
+}
 
-token parser::advance() {
-    if (!isAtEnd()) current++;
-    return previous();
+ExprPtr parser::comparison() {
+    ExprPtr expr = term();
+
+    while (match(tokenType::GREATER) ||
+           match(tokenType::GREATEREQUAL) ||
+           match(tokenType::LESS) ||
+           match(tokenType::LESSEQUAL)) {
+
+        token op = previous();
+        ExprPtr right = term();
+
+        auto binary = std::make_unique<BinaryExpr>();
+
+        binary->left = std::move(expr);
+        binary->op = op;
+        binary->right = std::move(right);
+
+        expr = std::move(binary);
+    }
+
+    return expr;
 }
 
 ExprPtr parser::equality() {
