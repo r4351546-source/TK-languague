@@ -34,6 +34,7 @@ enum class tokenType {
     CHARTYPE,
     BOOLTYPE,
     FNTYPE,
+    VOIDTYPE,
 
     INTEGER_LITERAL,
     FLOAT_LITERAL,

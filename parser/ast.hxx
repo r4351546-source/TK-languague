@@ -84,12 +84,19 @@ struct returnstmt : stmt/*return ....;*/ {
     ExprPtr value;
 };
 
+struct parameters {
+    token type;
+    token name;
+};
+
 struct fnstmt : stmt {
     token name;
     token returnType;
-    std::vector<token> parameters;
+    
+    std::vector<parameters> parameters;
     std::vector<stmtptr> body;
 };
+
 
 struct program {
     std::vector<stmtptr> statements;

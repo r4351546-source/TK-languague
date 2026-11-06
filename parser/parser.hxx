@@ -18,7 +18,7 @@ private:
 
     bool check(tokenType type); //done
     bool match(tokenType type); //done
-    token consume(tokenType type);
+    token consume(tokenType type);//done
     bool isAtEnd();//done
 
     // Declarations

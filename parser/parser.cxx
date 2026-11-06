@@ -220,3 +220,103 @@ ExprPtr parser::primary() {
     throw std::runtime_error("Expected expression");
 }
 
+/*
+— end of expression parsing functions —
+*/
+
+
+/*
+— start of statement parsing functions —
+*/
+
+stmtptr parser::statement() {
+    if (match(tokenType::IF)) return ifStatement();
+    if (match(tokenType::WHILE)) return whileStatement();
+    if (match(tokenType::FOR)) return forStatement();
+    if (match(tokenType::Return)) return returnStatement();
+    if (match(tokenType::leftbrace)) return blockStatement();
+
+    return expressionStatement();
+}
+
+stmtptr parser::functionDeclaration() {
+
+    token returnType;
+
+    if (match(tokenType::INTEGERTYPE) ||
+        match(tokenType::FLOATTYPE) ||
+        match(tokenType::CHARTYPE) ||
+        match(tokenType::BOOLTYPE)
+        || match(tokenType::VOIDTYPE)
+    ) {
+
+        returnType = previous();
+
+    } 
+    
+    else {
+        throw std::runtime_error("Expected return type");
+    }
+
+
+    token name = consume(tokenType::IDENTIFIER);
+
+    consume(tokenType::leftparen);
+
+
+    std::vector<parameters> Parameters;
+
+    if (!check(tokenType::rightparen)) {
+
+        do {
+
+            token paramType;
+
+            if (match(tokenType::INTEGERTYPE) ||
+                match(tokenType::FLOATTYPE) ||
+                match(tokenType::CHARTYPE) ||
+                match(tokenType::BOOLTYPE)) {
+
+                paramType = previous();
+
+            } else {
+                throw std::runtime_error("Expected parameter type");
+            }
+
+            token paramName = consume(tokenType::IDENTIFIER);
+
+            Parameters.push_back({
+                paramType,
+                paramName
+            });
+
+        } while (match(tokenType::comma));
+    }
+
+    consume(tokenType::rightparen);
+    consume(tokenType::leftbrace);
+
+    std::vector<stmtptr> body;
+
+    while (!check(tokenType::rightbrace) && !isAtEnd()) {
+        body.push_back(declaration());
+    }
+
+    consume(tokenType::rightbrace);
+
+    auto function = std::make_unique<fnstmt>();
+
+    function->name = name;
+    function->returnType = returnType;
+    function->parameters = std::move(Parameters);
+    function->body = std::move(body);
+
+    return function;
+}
+
+stmtptr parser::declaration() {
+    if (match(tokenType::FNTYPE)) return functionDeclaration();
+    if (match(tokenType::INTEGERTYPE) || match(tokenType::FLOATTYPE) || match(tokenType::CHARTYPE) || match(tokenType::BOOLTYPE)) return variableDeclaration();
+
+    return statement();
+}
