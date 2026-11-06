@@ -22,13 +22,13 @@ private:
     bool isAtEnd();//done
 
     // Declarations
-    stmtptr declaration();
-    stmtptr functionDeclaration();
-    stmtptr variableDeclaration();
+    stmtptr declaration();      //done
+    stmtptr functionDeclaration();//done
+    stmtptr variableDeclaration();//done
 
     // Statements
-    stmtptr  statement();
-    stmtptr blockStatement();
+    stmtptr  statement();       //done
+    stmtptr blockStatement();   //done
     stmtptr ifStatement();
     stmtptr whileStatement();
     stmtptr forStatement();

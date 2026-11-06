@@ -314,9 +314,47 @@ stmtptr parser::functionDeclaration() {
     return function;
 }
 
+
+stmtptr parser::variableDeclaration() {
+    token type = previous();
+    token name = consume(tokenType::IDENTIFIER);
+
+    ExprPtr initializer = nullptr;
+
+    if (match(tokenType::ASSIGN)) {
+        initializer = expression();
+    }
+
+    consume(tokenType::semicolon);
+
+    auto varDecl = std::make_unique<varDeclStmt>();
+    varDecl->type = type;
+    varDecl->name = name;
+    varDecl->initializer = std::move(initializer);
+
+    return varDecl;
+}
+
+
+
 stmtptr parser::declaration() {
     if (match(tokenType::FNTYPE)) return functionDeclaration();
     if (match(tokenType::INTEGERTYPE) || match(tokenType::FLOATTYPE) || match(tokenType::CHARTYPE) || match(tokenType::BOOLTYPE)) return variableDeclaration();
 
     return statement();
+}
+
+stmtptr parser::blockStatement() {
+    std::vector<stmtptr> statements;
+
+    while (!check(tokenType::rightbrace) && !isAtEnd()) {
+        statements.push_back(declaration());
+    }
+
+    consume(tokenType::rightbrace);
+
+    auto block = std::make_unique<Blockstmt>();
+    block->statements = std::move(statements);
+
+    return block;
 }
