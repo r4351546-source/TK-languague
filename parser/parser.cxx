@@ -20,6 +20,11 @@ token parser::advance() {
     return previous();
 }
 
+bool parser::check(tokenType type) {
+    if (isAtEnd()) return false;
+    return peek().TokenType == type;
+}
+
 bool parser::match(tokenType type) {
     if (check(type)) {
         advance();
@@ -28,13 +33,71 @@ bool parser::match(tokenType type) {
     return false;
 }
 
+token parser::consume(tokenType type) {
+    if (check(type)) return advance();
 
-
-bool parser::check(tokenType type) {
-    if (isAtEnd()) return false;
-    return peek().TokenType == type;
+    throw std::runtime_error("unexpected token");
 }
 
+ExprPtr parser::call() {
+    ExprPtr expr = primary();
+
+    while (match(tokenType::leftparen)) {
+        std::vector<ExprPtr> arguments;
+
+        if (!check(tokenType::rightparen)) {
+            do {
+                arguments.push_back(expression());
+            } while (match(tokenType::comma));
+        }
+
+        consume(tokenType::rightparen);
+
+        auto CallExpr = std::make_unique<callExpr>();
+        CallExpr->callee = std::move(expr);
+        CallExpr->arguments = std::move(arguments);
+
+        expr = std::move(CallExpr);
+    }
+
+    return expr;
+}
+
+ExprPtr parser::unary() {
+    if (match(tokenType::MINUS) ||
+        match(tokenType::PLUS)) {
+
+        token op = previous();
+        ExprPtr operand = unary();
+
+        auto expr = std::make_unique<UnaryExpr>();
+        expr->op = op;
+        expr->right = std::move(operand);
+
+        return expr;
+    }
+
+    return call();
+}
+
+ExprPtr parser::factor() {
+    ExprPtr expr = unary();
+
+    while (match(tokenType::MULTIPLY) || match(tokenType::DIVIDE)) {
+        token op = previous();
+        ExprPtr right = unary();
+
+        auto binary = std::make_unique<BinaryExpr>();
+
+        binary->left = std::move(expr);
+        binary->op = op;
+        binary->right = std::move(right);
+
+        expr = std::move(binary);
+    }
+
+    return expr;
+}
 
 
 ExprPtr parser::term() {

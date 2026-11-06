@@ -151,7 +151,7 @@ token lexer::readIdentifier() {
     if(lexeme == "if") {
         type = tokenType::IF;
     }
-    if(lexeme == "for") {
+    else if(lexeme == "for") {
         type = tokenType::FOR;
     }
     else if(lexeme == "elseif") {
@@ -177,6 +177,9 @@ token lexer::readIdentifier() {
     }
     else if(lexeme == "bool") {
         type = tokenType::BOOLTYPE;
+    }
+    else if(lexeme == "fn") {
+        type = tokenType::FNTYPE;
     }
     
         return {type, lexeme};
