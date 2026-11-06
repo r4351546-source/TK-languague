@@ -7,7 +7,7 @@ enum class tokenType {
     IDENTIFIER,
 
     //awarding
-    ASSIGN,     //=
+    ASSIGN,     //= 
     PLUSASSIGN, //+=
     MINUSASSIGN,//-=
     MULTIPLYASSIGN,//*=

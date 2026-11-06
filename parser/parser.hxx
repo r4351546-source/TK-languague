@@ -42,8 +42,8 @@ private:
     ExprPtr comparison();   //done
     ExprPtr term();         //done
     ExprPtr factor();       //done
-    ExprPtr unary();  
-    ExprPtr call();
+    ExprPtr unary();        //done
+    ExprPtr call();         //done
     ExprPtr primary();      //done
 
 public:
