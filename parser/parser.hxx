@@ -29,9 +29,9 @@ private:
     // Statements
     stmtptr  statement();       //done
     stmtptr blockStatement();   //done
-    stmtptr ifStatement();
-    stmtptr whileStatement();
-    stmtptr forStatement();
+    stmtptr ifStatement();      //done
+    stmtptr whileStatement();   //done
+    stmtptr forStatement();     //done
     stmtptr returnStatement();
     stmtptr expressionStatement();
 

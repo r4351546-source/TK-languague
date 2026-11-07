@@ -41,7 +41,6 @@ enum class tokenType {
     
     //conditions
     IF,
-    ELIF,
     ELSE,
 
     //cycles

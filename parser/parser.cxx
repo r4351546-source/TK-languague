@@ -229,6 +229,107 @@ ExprPtr parser::primary() {
 — start of statement parsing functions —
 */
 
+stmtptr parser::whileStatement() {
+    consume(tokenType::leftparen);
+
+    ExprPtr condition = expression();
+
+    consume(tokenType::rightparen);
+
+    stmtptr body = statement();
+
+    auto whiles = std::make_unique<whileStmt>();
+
+    whiles->condition = std::move(condition);
+    whiles->body = std::move(body);
+
+    return whiles;
+}
+
+stmtptr parser::ifStatement() {
+    consume(tokenType::leftparen);
+
+    ExprPtr condition = expression();
+
+    consume(tokenType::rightparen);
+
+    stmtptr thenBranch = statement();
+
+    stmtptr elseBranch = nullptr;
+
+    if (match(tokenType::ELSE)) {
+        elseBranch = statement();
+    }
+
+    auto stmt = std::make_unique<Ifstmt>();
+
+    stmt->condition = std::move(condition);
+    stmt->thenBranch = std::move(thenBranch);
+    stmt->elseBranch = std::move(elseBranch);
+
+    return stmt;
+}
+
+stmtptr parser::forStatement() {
+    consume(tokenType::leftparen);
+
+    stmtptr initializer = nullptr;
+
+    if (!check(tokenType::semicolon)) {
+        if (match(tokenType::INTEGERTYPE) ||
+            match(tokenType::FLOATTYPE) ||
+            match(tokenType::CHARTYPE) ||
+            match(tokenType::BOOLTYPE)) {
+
+            initializer = variableDeclaration();
+
+        }
+        
+        else {
+            ExprPtr expr = expression();
+
+            consume(tokenType::semicolon);
+
+            auto expressionStmt = std::make_unique<expressionstmt>();
+            expressionStmt->expression = std::move(expr);
+
+            initializer = std::move(expressionStmt);
+        }
+    } 
+    else {
+        consume(tokenType::semicolon);
+    }
+
+    ExprPtr condition = nullptr;
+
+    if (!check(tokenType::semicolon)) {
+        condition = expression();
+    }
+
+    consume(tokenType::semicolon);
+
+    ExprPtr increment = nullptr;
+
+    if (!check(tokenType::rightparen)) {
+        increment = expression();
+    }
+
+    consume(tokenType::rightparen);
+
+    stmtptr body = statement();
+
+    auto loop = std::make_unique<forStmt>();
+
+    loop->initializer = std::move(initializer);
+    loop->condition = std::move(condition);
+    loop->increment = std::move(increment);
+    loop->body = std::move(body);
+
+    return loop;
+}
+
+
+
 stmtptr parser::statement() {
     if (match(tokenType::IF)) return ifStatement();
     if (match(tokenType::WHILE)) return whileStatement();
@@ -275,7 +376,9 @@ stmtptr parser::functionDeclaration() {
             if (match(tokenType::INTEGERTYPE) ||
                 match(tokenType::FLOATTYPE) ||
                 match(tokenType::CHARTYPE) ||
-                match(tokenType::BOOLTYPE)) {
+                match(tokenType::BOOLTYPE)
+                || match(tokenType::VOIDTYPE)
+            ) {
 
                 paramType = previous();
 
@@ -358,3 +461,5 @@ stmtptr parser::blockStatement() {
 
     return block;
 }
+
+

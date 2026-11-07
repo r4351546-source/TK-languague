@@ -73,6 +73,10 @@ struct whileStmt : stmt/*while(....) {....}*/ {
     stmtptr body;
 };
 
+struct expressionstmt : stmt {
+    ExprPtr expression;
+};
+
 struct forStmt : stmt/*for(....) {....}*/ {
     stmtptr initializer;
     ExprPtr condition;

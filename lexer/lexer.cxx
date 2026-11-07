@@ -154,9 +154,6 @@ token lexer::readIdentifier() {
     else if(lexeme == "for") {
         type = tokenType::FOR;
     }
-    else if(lexeme == "elseif") {
-        type = tokenType::ELIF;
-    }
     else if(lexeme == "else") {
         type = tokenType::ELSE;
     }
