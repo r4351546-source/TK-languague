@@ -224,10 +224,37 @@ ExprPtr parser::primary() {
 — end of expression parsing functions —
 */
 
+/*======================================*/
 
 /*
 — start of statement parsing functions —
 */
+stmtptr parser::expressionStatement() {
+    ExprPtr expr = expression();
+
+    consume(tokenType::semicolon);
+
+    auto stmt = std::make_unique<expressionstmt>();
+    stmt->expression = std::move(expr);
+
+    return stmt;
+}
+
+
+stmtptr parser::returnStatement() {
+    ExprPtr value = nullptr;
+
+    if (!check(tokenType::semicolon)) {
+        value = expression();
+    }
+
+    consume(tokenType::semicolon);
+
+    auto stmt = std::make_unique<returnstmt>();
+    stmt->value = std::move(value);
+
+    return stmt;
+}
 
 stmtptr parser::whileStatement() {
     consume(tokenType::leftparen);
