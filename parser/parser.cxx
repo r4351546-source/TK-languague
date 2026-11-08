@@ -2,13 +2,38 @@
 #include "stdexcept"
 #include <utility>
 
+parser::parser(std::vector<token>* tokens)
+    : tokens(tokens), current(0)
+{
+    if (this->tokens == nullptr) {
+        throw std::invalid_argument(
+            "Parser received nullptr"
+        );
+    }
+
+    if (this->tokens->empty()) {
+        throw std::invalid_argument(
+            "Parser received empty token vector"
+        );
+    }
+
+    if (this->tokens->back().TokenType != tokenType::eof) {
+        throw std::invalid_argument(
+            "Token stream must end with EOF"
+        );
+    }
+}
 
 token parser::previous() {
-    return tokens[current - 1];
+    return (*tokens)[current - 1];
 }
 
 token parser::peek() {
-    return tokens[current];
+    if (current >= tokens->size()) {
+        return tokens->back();
+    }
+
+    return (*tokens)[current];
 }
 
 bool parser::isAtEnd() {
@@ -229,6 +254,9 @@ ExprPtr parser::primary() {
 /*
 — start of statement parsing functions —
 */
+
+
+
 stmtptr parser::expressionStatement() {
     ExprPtr expr = expression();
 
@@ -409,7 +437,8 @@ stmtptr parser::functionDeclaration() {
 
                 paramType = previous();
 
-            } else {
+            } 
+            else {
                 throw std::runtime_error("Expected parameter type");
             }
 
@@ -490,3 +519,24 @@ stmtptr parser::blockStatement() {
 }
 
 
+
+
+program parser::mainparse() {
+    program result;
+
+    while (!isAtEnd()) {
+        std::size_t start = current;
+
+        result.statements.push_back(
+            declaration()
+        );
+
+        if (current == start) {
+            throw std::runtime_error(
+                "Parser made no progress"
+            );
+        }
+    }
+
+    return result;
+}

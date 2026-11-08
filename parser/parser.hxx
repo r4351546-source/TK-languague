@@ -8,7 +8,7 @@
 
 class parser {
 private:
-    std::vector<token> tokens;
+    std::vector<token>* tokens = nullptr;
     std::size_t current = 0;
 
     // Navigation
@@ -46,8 +46,8 @@ private:
     ExprPtr call();         //done
     ExprPtr primary();      //done
 
-public:
-    parser(std::vector<token> tokens);
+    public:
+    parser(std::vector<token>* tokens);
 
     program mainparse();
 };

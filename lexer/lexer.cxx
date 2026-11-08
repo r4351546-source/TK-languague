@@ -178,6 +178,9 @@ token lexer::readIdentifier() {
     else if(lexeme == "fn") {
         type = tokenType::FNTYPE;
     }
+    else if (lexeme == "void") {
+    type = tokenType::VOIDTYPE;
+    }
     
         return {type, lexeme};
 }
