@@ -38,6 +38,7 @@ enum class tokenType {
 
     INTEGER_LITERAL,
     FLOAT_LITERAL,
+    STRING_LITERAL,
     
     //conditions
     IF,
@@ -46,6 +47,15 @@ enum class tokenType {
     //cycles
     WHILE,
     FOR,
+
+    //boolean
+    TRUE,
+    FALSE,
+
+    //logical
+    AND,        //&&
+    OR,         //||
+    NOT,        //!
 
     //other
     semicolon,   //semicolon — ;
@@ -59,10 +69,17 @@ enum class tokenType {
     eof
 };
 
+struct srcpos {
+    std::size_t line = 1;
+    std::size_t column = 1;
+};
+
 struct token {
     tokenType TokenType;
     std::string_view lexeme;
+    srcpos location;
 };
+
 
 class lexer {
     

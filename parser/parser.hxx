@@ -45,6 +45,8 @@ private:
     ExprPtr unary();        //done
     ExprPtr call();         //done
     ExprPtr primary();      //done
+    ExprPtr logicalAnd();   //done
+    ExprPtr logicalOr();    //done
 
     public:
     parser(std::vector<token>* tokens);

@@ -245,6 +245,46 @@ ExprPtr parser::primary() {
     throw std::runtime_error("Expected expression");
 }
 
+ExprPtr parser::logicalAnd()
+{
+    auto expr = equality();
+
+    while (match(tokenType::AND))
+    {
+        token op = previous();
+        auto right = equality();
+
+        expr = std::make_unique<BinaryExpr>(
+            std::move(expr),
+            op,
+            std::move(right)
+        );
+    }
+
+    return expr;
+}
+
+ExprPtr parser::logicalOr()
+{
+    auto expr = logicalAnd();
+
+    while (match(tokenType::OR))
+    {
+        token op = previous();
+        auto right = logicalAnd();
+
+        expr = std::make_unique<BinaryExpr>(
+            std::move(expr),
+            op,
+            std::move(right)
+        );
+    }
+
+    return expr;
+}
+
+
+
 /*
 — end of expression parsing functions —
 */

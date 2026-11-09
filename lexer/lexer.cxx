@@ -22,9 +22,12 @@ void lexer::skipWhitespace() {
 }
 
 void lexer::skipcomment() {
-    if(src[current] == '/' && src[current + 1] == '/') {
-        current++;
-    }
+    if (peek() != '/' || current + 1 >= src.size() ||
+        src[current + 1] != '/')
+        return;
+
+    while (peek() != '\n' && peek() != '\0')
+        advance();
 }
 
 token lexer::readOperator() {
@@ -86,6 +89,8 @@ token lexer::readOperator() {
                 return {tokenType::NOTEQUAL,
                     std::string_view(src.data() + start, current - start)};
             }
+            return {tokenType::NOT,
+                std::string_view(src.data() + start, current - start)};
             break;
 
         case '<':
@@ -130,6 +135,16 @@ token lexer::readOperator() {
         case '}':
             return {tokenType::rightbrace,
                 std::string_view(src.data() + start, current - start)};
+        
+        case '&':
+            if (match('&'))
+            return {tokenType::AND, "&&"};
+            break;
+
+        case '|':
+            if (match('|'))
+            return {tokenType::OR, "||"};
+            break;
     }
 
     return {tokenType::invalid,
@@ -180,6 +195,12 @@ token lexer::readIdentifier() {
     }
     else if (lexeme == "void") {
     type = tokenType::VOIDTYPE;
+    }
+    else if (lexeme == "true") {
+        type = tokenType::TRUE;
+    }
+    else if (lexeme == "false") {
+        type = tokenType::FALSE;
     }
     
         return {type, lexeme};
