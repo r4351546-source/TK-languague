@@ -13,14 +13,23 @@ enum class symbolKind {
 };
 
 struct symbol {
+    symbol(
+        const std::string& name,
+        symbolKind kind,
+        Type type
+    );
+
+    symbol(
+    const std::string& name,
+    Type returnType,
+    std::vector<Type> parameterTypes
+    );
     std::string name;
 
-    symbolKind kind;
+    symbolKind kind = symbolKind::VARIABLE;
 
-    Type type;
+    Type type = Type{ typekind::INVALID };
 
     std::vector<Type> parameterTypes;
 
 };
-
-using smbptr = std::unique_ptr<symbol>;

@@ -10,7 +10,7 @@ enum class typekind {
 };
 
 struct Type {
-    typekind kind;
+    typekind kind = typekind::INVALID;
 
     bool operator==(const Type& other) const {
         return kind == other.kind;

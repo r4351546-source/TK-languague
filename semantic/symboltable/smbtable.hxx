@@ -24,8 +24,8 @@ public:
 
     bool declare(const symbol& symbol);
 
-    smbptr lookup(const std::string& name);
+    symbol* lookup(const std::string& name);
 
-    smbptr lookupcurrent(const std::string& name);
+    symbol* lookupcurrent(const std::string& name);
 
 };
