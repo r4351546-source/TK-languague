@@ -146,6 +146,8 @@ ExprPtr parser::term() {
 
 
 }
+
+
 ExprPtr parser::comparison() {
     ExprPtr expr = term();
 
@@ -192,7 +194,7 @@ ExprPtr parser::equality() {
 
 
 ExprPtr parser::assignment() {
-    ExprPtr expr = equality();
+    ExprPtr expr = logicalOr();
 
     if (match(tokenType::ASSIGN)) {
         token equals = previous();
@@ -266,11 +268,13 @@ ExprPtr parser::logicalAnd()
         token op = previous();
         auto right = equality();
 
-        expr = std::make_unique<BinaryExpr>(
-            std::move(expr),
-            op,
-            std::move(right)
-        );
+        auto binary = std::make_unique<BinaryExpr>();
+
+    binary->left = std::move(expr);
+    binary->op = op;
+    binary->right = std::move(right);
+
+    expr = std::move(binary);
     }
 
     return expr;
@@ -285,11 +289,13 @@ ExprPtr parser::logicalOr()
         token op = previous();
         auto right = logicalAnd();
 
-        expr = std::make_unique<BinaryExpr>(
-            std::move(expr),
-            op,
-            std::move(right)
-        );
+        auto binary = std::make_unique<BinaryExpr>();
+
+        binary->left = std::move(expr);
+        binary->op = op;
+        binary->right = std::move(right);
+
+        expr = std::move(binary);
     }
 
     return expr;

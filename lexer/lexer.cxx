@@ -261,35 +261,38 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
     current = 0;
     start = 0;
 
-    while(current < src.size()) {
-        start = current;
+    while (current < src.size()) {
+    start = current;
 
-        if(std::isspace(static_cast<unsigned char>(advance()))) {
-            skipWhitespace();
-            continue;
-        }
-
-        if(std::isalpha(static_cast<unsigned char>(peek())) || peek() == '_') {
-            token identifierToken = readIdentifier();
-            addToken(identifierToken.TokenType, identifierToken.lexeme);
-            continue;
-        }
-
-        if(std::isdigit(static_cast<unsigned char>(peek()))) {
-            token numberToken = readNumber();
-            addToken(numberToken.TokenType, numberToken.lexeme);
-            continue;
-        }
-
-        token operatorToken = readOperator(advance());
-        if(operatorToken.TokenType != tokenType::invalid) {
-            addToken(operatorToken.TokenType, operatorToken.lexeme);
-            continue;
-        }
-
-        addToken(tokenType::invalid, std::string_view(src.data() + start, current - start));
+    if (std::isspace(static_cast<unsigned char>(peek()))) {
+        advance();
+        skipWhitespace();
+        continue;
     }
 
+    if (std::isalpha(static_cast<unsigned char>(peek())) || peek() == '_') {
+        token identifierToken = readIdentifier();
+        addToken(identifierToken.TokenType, identifierToken.lexeme);
+        continue;
+    }
+
+    if (std::isdigit(static_cast<unsigned char>(peek()))) {
+        token numberToken = readNumber();
+        addToken(numberToken.TokenType, numberToken.lexeme);
+        continue;
+    }
+
+    token operatorToken = readOperator(peek());
+
+    if (operatorToken.TokenType != tokenType::invalid) {
+        addToken(operatorToken.TokenType, operatorToken.lexeme);
+        continue;
+    }
+
+    addToken(tokenType::invalid,
+        std::string_view(src.data() + start, current - start));
+    }
+    
     addToken(tokenType::eof, std::string_view());
     return tokens;
 }
