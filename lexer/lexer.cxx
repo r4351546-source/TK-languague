@@ -264,18 +264,18 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
     while(current < src.size()) {
         start = current;
 
-        if(std::isspace(static_cast<unsigned char>(c))) {
+        if(std::isspace(static_cast<unsigned char>(advance()))) {
             skipWhitespace();
             continue;
         }
 
-        if(std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
+        if(std::isalpha(static_cast<unsigned char>(peek())) || peek() == '_') {
             token identifierToken = readIdentifier();
             addToken(identifierToken.TokenType, identifierToken.lexeme);
             continue;
         }
 
-        if(std::isdigit(static_cast<unsigned char>(c))) {
+        if(std::isdigit(static_cast<unsigned char>(peek()))) {
             token numberToken = readNumber();
             addToken(numberToken.TokenType, numberToken.lexeme);
             continue;
