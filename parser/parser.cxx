@@ -89,7 +89,8 @@ ExprPtr parser::call() {
 }
 
 ExprPtr parser::unary() {
-    if (match(tokenType::MINUS) ||
+    if (match(tokenType::NOT) || 
+        match(tokenType::MINUS) ||
         match(tokenType::PLUS)) {
 
         token op = previous();
@@ -215,6 +216,17 @@ ExprPtr parser::expression() {
 }
 
 ExprPtr parser::primary() {
+    
+    if (match(tokenType::TRUE) ||
+    match(tokenType::FALSE)) {
+
+    auto expr = std::make_unique<LiteralExpr>();
+
+    expr->value = previous();
+
+    return expr;
+    }
+    
     if (match(tokenType::INTEGER_LITERAL) ||
         match(tokenType::FLOAT_LITERAL)) {
 

@@ -30,11 +30,11 @@ void lexer::skipcomment() {
         advance();
 }
 
-token lexer::readOperator() {
+token lexer::readOperator(char op) {
 
-    char c = advance();
+    op = advance();
 
-    switch(c) {
+    switch(op) {
 
         // Assignment operators
         case '=':
@@ -263,7 +263,6 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
 
     while(current < src.size()) {
         start = current;
-        char c = advance();
 
         if(std::isspace(static_cast<unsigned char>(c))) {
             skipWhitespace();
@@ -282,7 +281,7 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
             continue;
         }
 
-        token operatorToken = readOperator();
+        token operatorToken = readOperator(advance());
         if(operatorToken.TokenType != tokenType::invalid) {
             addToken(operatorToken.TokenType, operatorToken.lexeme);
             continue;

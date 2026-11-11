@@ -94,7 +94,7 @@ class lexer {
     bool match(char expect);
     token readIdentifier();
     token readNumber();
-    token readOperator();
+    token readOperator(char op);
 
     int line = 1;
     int column = 1;
