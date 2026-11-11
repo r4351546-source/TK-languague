@@ -1,0 +1,310 @@
+# TKIPL — TK Initiative Public License
+**Version 1.0**
+
+Copyright (c) 2036 r4351546-source
+
+All rights reserved under the terms of this license.
+
+---
+
+## 1. Purpose and Philosophy
+
+TKIPL (TK Initiative Public License) is a license created for projects developed under the **TK Initiative (TKI — Toolchain Kit Initiative)**.
+
+Its purpose is to allow software to be used, studied, modified, redistributed, integrated and commercially developed while preserving original authorship, source-code availability and the rights granted by this license.
+
+This license applies to software, libraries, compilers, development tools, documentation and other materials explicitly distributed under TKIPL.
+
+## 2. Definitions
+
+For the purposes of this license:
+
+- **Original Author** — the person or entity that owns the copyright to the original licensed work.
+- **Licensed Work** — any software or other material distributed under TKIPL.
+- **Derivative Work** — a modified, extended, adapted or otherwise derived version of a Licensed Work.
+- **Fork** — an independently maintained version of a Licensed Work or another fork.
+- **Distribution** — making a copy of a Licensed Work or Derivative Work available to another person or entity.
+- **Source Code** — the preferred form of a work for making modifications.
+- **Commercial Use** — use intended to generate revenue or provide a commercial benefit.
+- **Private Use** — use within an individual or organization without distributing the work outside its internal environment.
+- **Cloud Service** — a service that provides users with functionality through a network.
+
+## 3. Permissions
+
+Subject to the conditions of this license, every recipient is granted permission to:
+
+1. Use the Licensed Work for personal, educational, research, governmental, military and commercial purposes.
+2. Study and modify the source code.
+3. Create Derivative Works and Forks.
+4. Create Forks of Forks without restrictions on their depth.
+5. Redistribute original and modified versions.
+6. Integrate the Licensed Work into operating systems, programming languages, compilers, SDKs, APIs and other software.
+7. Distribute the Licensed Work through package managers, repositories, software stores and release platforms.
+8. Create and distribute commercial open-source products based on the Licensed Work.
+9. Charge for subscriptions, hosting, technical support, additional services and infrastructure, provided that the source-code requirements of this license are respected.
+10. Use the Licensed Work in artificial intelligence products, frameworks and models, including training AI models on its source code.
+11. Create educational materials, books, courses, tutorials and documentation containing the Licensed Work.
+12. Remove or replace individual components of the Licensed Work in Derivative Works.
+
+No additional permission is required for the activities listed above unless another section of this license explicitly requires it.
+
+## 4. Source Code Availability
+
+### 4.1 Distribution Requirement
+
+When distributing a product containing a Licensed Work or Derivative Work, the distributor must make the complete corresponding source code of all TKIPL-licensed components available to recipients free of charge.
+
+This requirement applies to:
+- Original TKIPL code included in the product.
+- Modifications and extensions made to TKIPL-licensed components.
+- Other code that forms part of a Derivative Work under TKIPL.
+
+Independent components that are not derived from TKIPL code do not need to have their source code disclosed and may remain proprietary, subject to the other conditions of this license.
+
+This license does not require disclosure of the source code of an entire product solely because it incorporates TKIPL-licensed components.
+
+### 4.2 Binary Distribution
+
+Binary distributions, including `.exe`, `.dll`, `.so` and other compiled formats, are permitted.
+
+A binary distribution must provide:
+
+- A reference to TKIPL.
+- Acknowledgment of the original author.
+- A link to the complete license text.
+- Access to the complete corresponding source code.
+
+The full license text does not need to be embedded directly into the binary.
+
+### 4.3 Cloud and Network Services
+
+If a Licensed Work or Derivative Work is used to provide a Cloud Service, the complete corresponding source code of the service must be made available to its users free of charge.
+
+### 4.4 Private and Internal Use
+
+Private use, internal development and internal modification are permitted without publishing source code, provided that the work is not distributed or made available as a Cloud Service.
+
+Companies may maintain private repositories and make internal modifications without publishing them under this section.
+
+## 5. Commercial Restrictions
+
+### 5.1 Commercial Open Products
+
+Commercial products are permitted when their complete corresponding source code remains available under the requirements of this license.
+
+Paid subscriptions, hosting, support, additional services and infrastructure are permitted.
+
+### 5.2 Closed Commercial Products
+
+Distribution of closed-source commercial products containing or derived from TKIPL code is prohibited unless separate permission is obtained from the Original Author.
+
+### 5.3 Private Commercial Use
+
+Private commercial use within an organization is permitted without publishing internal source code, provided that the work is not distributed or offered as a Cloud Service.
+
+### 5.4 Advertising
+
+Advertising-based monetization is prohibited.
+
+Products distributed under TKIPL must not generate revenue through embedded advertisements or advertising displays.
+
+### 5.5 Paid Source-Code Access
+
+Charging users for access to the source code of a distributed Licensed Work or Derivative Work is prohibited.
+
+The corresponding source code must remain freely accessible.
+
+Charging for separate services, support, hosting and additional functionality is permitted.
+
+### 5.6 Resale of Unmodified Code
+
+Reselling the original Licensed Work as a standalone product without meaningful modification or additional functionality is prohibited.
+
+## 6. Proprietary Components and Linking
+
+### 6.1 Separate Proprietary Components
+
+Separate proprietary components that are not derived from TKIPL code may be included in products under the following conditions:
+
+- They must remain genuinely separate from the Licensed Work.
+- Their inclusion must not be used to bypass the requirements of TKIPL.
+- Closed proprietary components may only be used in noncommercial products without separate permission.
+
+### 6.2 Static and Dynamic Linking
+
+Using TKIPL libraries or components through static or dynamic linking in a closed-source product requires separate permission from the Original Author.
+
+This applies to static linking and dynamic linking, including `.dll` and `.so` libraries.
+
+### 6.3 Open Products
+
+Open products may integrate TKIPL components without additional permission, provided that the resulting product complies with this license.
+
+## 7. Copyleft and Derivative Works
+
+All Derivative Works containing or based on TKIPL code must be distributed under TKIPL.
+
+When TKIPL code is combined into a single Derivative Work, the resulting combined project must use TKIPL.
+
+Separate, independent components that are not derived from TKIPL code are not automatically subject to this requirement, subject to Section 6.
+
+Forks of any depth are permitted.
+
+## 8. Copyright and Attribution
+
+The original authorship of the Licensed Work must not be removed, concealed or misrepresented.
+
+Every distribution must:
+
+1. Preserve the original copyright notices.
+2. Include acknowledgment of the Original Author.
+3. Include the original author in the Credits section or equivalent documentation.
+4. Provide a reference to TKIPL.
+
+Fork authors may add their own copyright notices and acknowledgments.
+
+Fork authors may change the project's name, logo, interface and branding, but must retain a visible reference to TKI within the product.
+
+Original authorship must remain in the Credits section.
+
+## 9. Modification Notices
+
+Modified versions must clearly indicate that changes have been made.
+
+A brief description of the modifications must be provided.
+
+A complete CHANGELOG is not mandatory.
+
+## 10. Trademarks and Branding
+
+This license does not grant ownership of or unrestricted rights to TKI trademarks, logos or branding.
+
+Third parties may refer to TKI and TKIPL to identify the origin or compatibility of software, provided that such references are truthful.
+
+Forks must not be presented as official TKI products unless explicitly authorized.
+
+The name TKIPL may be used to indicate compatibility with this license when such compatibility is genuine.
+
+## 11. Additional Licensing Terms and EULAs
+
+Additional EULAs and licensing agreements may be used alongside TKIPL.
+
+However, no additional agreement may revoke, restrict, override or otherwise invalidate rights granted by TKIPL.
+
+Any conflicting provision is not authorized by this license.
+
+## 12. Sublicensing
+
+Sublicensing the Licensed Work under another license requires separate permission from the Original Author.
+
+Derivative Works must otherwise remain under TKIPL.
+
+## 13. Patent Grant
+
+Each contributor grants recipients a non-exclusive, worldwide, royalty-free patent license under patent claims that the contributor owns or controls and that are necessarily infringed by the contributor's contribution alone or by its combination with the work to which it was submitted.
+
+This grant does not extend to patent claims covering independent modifications or other separate technologies.
+
+## 14. Privacy and Technical Restrictions
+
+### 14.1 Telemetry
+
+Telemetry and analytics collection are prohibited in products distributed under TKIPL.
+
+This includes collecting or transmitting usage statistics, behavioral analytics and diagnostic analytics.
+
+### 14.2 Crash Reports
+
+Crash reports and diagnostic error reports may only be transmitted after the user has given explicit consent.
+
+Automatic transmission must be disabled by default.
+
+### 14.3 DRM and Technical Restrictions
+
+DRM and technical restrictions that prevent users from exercising rights granted by TKIPL are prohibited.
+
+No technical measure may be used to restrict the rights granted by this license.
+
+## 15. Artificial Intelligence
+
+The use of TKIPL code in artificial intelligence systems is permitted.
+
+This includes:
+
+- Integration into AI products.
+- Use in local AI models.
+- Integration into AI frameworks.
+- Training machine learning models on TKIPL code.
+- Development of AI-assisted programming tools.
+
+All applicable requirements of TKIPL remain in force.
+
+## 16. Transfer and Sale of Projects
+
+Selling or transferring a project containing TKIPL code as a project requires separate permission from the Original Author.
+
+This provision does not automatically transfer the copyright ownership of the original Licensed Work.
+
+## 17. Removal of TKIPL Code
+
+A project may remove or replace TKIPL code in future versions.
+
+Previously distributed versions containing TKIPL code remain subject to the version of TKIPL under which they were originally distributed.
+
+Removing TKIPL code does not retroactively revoke rights granted for earlier versions.
+
+## 18. License Termination
+
+Any violation of the terms of this license results in permanent termination of the violator's rights under TKIPL.
+
+Correction of the violation does not automatically restore those rights.
+
+Only the Original Author may explicitly restore the terminated rights.
+
+Termination does not affect the rights of recipients who have independently complied with this license.
+
+## 19. Changes to the License
+
+Only the Original Author or an explicitly authorized party may publish or approve an official modified version of TKIPL.
+
+Third parties may create their own license texts, but must not present them as official TKIPL versions.
+
+Previously distributed works remain governed by the license version accompanying their distribution unless the Original Author explicitly provides otherwise.
+
+## 20. Applicable Law and International Scope
+
+TKIPL is intended for international use.
+
+It does not designate a single country's law as universally applicable.
+
+Copyright and other applicable legal matters shall be interpreted according to the relevant laws and international agreements applicable in the jurisdiction concerned.
+
+Nothing in this license is intended to override mandatory legal protections.
+
+## 21. Disclaimer of Warranty
+
+THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+THE ORIGINAL AUTHOR AND CONTRIBUTORS DISCLAIM ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
+
+- MERCHANTABILITY.
+- FITNESS FOR A PARTICULAR PURPOSE.
+- NON-INFRINGEMENT.
+- ACCURACY OR RELIABILITY.
+- ERROR-FREE OPERATION.
+
+The Original Author and contributors shall not be liable for damages arising from the use, modification, distribution or inability to use the Licensed Work, to the maximum extent permitted by applicable law.
+
+## 22. Final Provisions
+
+By using, modifying or distributing the Licensed Work, the recipient agrees to comply with the terms of TKIPL.
+
+If any provision of this license is held unenforceable, the remaining provisions shall remain in effect to the extent permitted by applicable law.
+
+---
+
+**TKIPL — TK Initiative Public License**
+
+**Version:** 1.0  
+**Initiative:** TKI — Toolchain Kit Initiative  
+**Original Author:** [r4351546-source]  
