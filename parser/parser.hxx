@@ -50,6 +50,6 @@ private:
 
     public:
     parser(std::vector<token>* tokens);
-
+                             
     program mainparse();
 };
