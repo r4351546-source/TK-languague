@@ -24,6 +24,7 @@ struct symbol {
     Type returnType,
     std::vector<Type> parameterTypes
     );
+    
     std::string name;
 
     symbolKind kind = symbolKind::VARIABLE;

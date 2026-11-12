@@ -7,6 +7,7 @@ project(TKlang
     VERSION 1.0
     LANGUAGES CXX
 )
+
 add_executable(TKlang
     
     lexer/lexer.cxx
@@ -16,9 +17,11 @@ add_executable(TKlang
     semantic/analyzer/analyzer.cxx
     semantic/symboltable/smb.cxx
     semantic/symbol/symbol.cxx
+    semantic/Type/type.cxx
+    semantic/analyzer/analyzer.cxx
 )
 
-target_include_directories(TKlang PRIVATE 
+target_include_directories(TKlang PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/lexer
     ${CMAKE_CURRENT_SOURCE_DIR}/semantic
     ${CMAKE_CURRENT_SOURCE_DIR}/file
