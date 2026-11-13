@@ -1,4 +1,12 @@
 #include "analyzer.hxx"
+#include <iostream>
+
+void analyzer::reportError(const std::string& message)
+{
+    std::cerr << "Semantic error: " << message << std::endl;
+    errorCount++;
+}
+
 
 bool analyzer::isNumeric(Type type) const
 {
@@ -609,6 +617,150 @@ Type analyzer::analyzeExpression(const Expr& expression)
     reportError("unknown expression type");
 
     return invalid;
+}
+
+
+
+bool analyzer::analyzeFunction(const fnstmt& function)
+{
+    bool valid = true;
+
+    const std::string name(function.name.lexeme);
+
+    
+    Type returnType = resolvetype(function.returnType);
+
+    if (returnType.kind == typekind::INVALID)
+    {
+        reportError(
+            "Unknown return type in function: " + name
+        );
+
+        return false;
+    }
+
+    
+    if (symbols.lookupcurrent(name))
+    {
+        reportError(
+            "Function already declared: " + name
+        );
+
+        return false;
+    }
+
+    
+    std::vector<Type> parameterTypes;
+
+    for (const auto& parameter : function.parameters)
+    {
+        Type parameterType = resolvetype(parameter.type);
+
+        if (parameterType.kind == typekind::INVALID ||
+            parameterType.kind == typekind::VOID)
+        {
+            reportError(
+                "Invalid parameter type in function: " + name
+            );
+
+            valid = false;
+            continue;
+        }
+
+        parameterTypes.push_back(parameterType);
+    }
+
+    
+    if (!valid)
+        return false;
+
+    
+    symbol functionSymbol(
+        name,
+        returnType,
+        parameterTypes
+    );
+
+    if (!symbols.declare(functionSymbol))
+    {
+        reportError(
+            "Failed to declare function: " + name
+        );
+
+        return false;
+    }
+
+    
+    Type previousReturnType = currentReturnType;
+    bool previousInsideFunction = insideFunction;
+
+    currentReturnType = returnType;
+    insideFunction = true;
+
+    
+    symbols.enterscope();
+
+    
+    for (const auto& parameter : function.parameters)
+    {
+        const std::string parameterName(
+            parameter.name.lexeme
+        );
+
+        Type parameterType = resolvetype(parameter.type);
+
+        if (symbols.lookupcurrent(parameterName))
+        {
+            reportError(
+                "Duplicate parameter: " + parameterName
+            );
+
+            valid = false;
+            continue;
+        }
+
+        symbol parameterSymbol(
+            parameterName,
+            symbolKind::PARAMETER,
+            parameterType
+        );
+
+        if (!symbols.declare(parameterSymbol))
+        {
+            reportError(
+                "failed to declare parameter: " + parameterName
+            );
+
+            valid = false;
+        }
+    }
+
+    
+    for (const auto& statement : function.body)
+    {
+        if (!statement)
+        {
+            reportError(
+                "null statement in function: " + name
+            );
+
+            valid = false;
+            continue;
+        }
+
+        if (!analyzeStatement(*statement)){
+            valid = false;
+        }
+    }
+
+    
+    symbols.exitscope();
+
+    
+    currentReturnType = previousReturnType;
+    insideFunction = previousInsideFunction;
+
+    return valid;
 }
 
 
