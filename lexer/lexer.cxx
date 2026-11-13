@@ -261,6 +261,24 @@ void lexer::addToken(tokenType type, std::string_view value) {
 }
 
 
+token lexer::readstr() {
+    advance();
+
+    while (peek() != '"' && peek() != '\0') {
+        advance();
+    }
+
+    if (peek() == '\0') {
+        
+        return {tokenType::invalid, std::string_view(src.data() + start, current - start)};
+    }
+
+    advance(); 
+
+    std::string_view lexeme(src.data() + start, current - start);
+    return {tokenType::STRING_LITERAL, lexeme};
+}
+
 std::vector<token> lexer::mainlexer(const std::string& source) {
     src = source;
     tokens.clear();
