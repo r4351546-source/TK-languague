@@ -315,7 +315,38 @@ ExprPtr parser::logicalOr()
 — start of statement parsing functions —
 */
 
+stmtptr parser::usedecl() {
 
+    std::vector<token> path;
+
+    path.push_back(consume(tokenType::IDENTIFIER));
+
+    while (match(tokenType::scope)) {
+        path.push_back(consume(tokenType::IDENTIFIER));
+    }
+
+    consume(tokenType::semicolon);
+
+    auto stmt = std::make_unique<usestmt>();
+
+    stmt->path = std::move(path);
+
+    return stmt;
+}
+
+
+stmtptr parser::incdecl() {
+
+    token path = consume(tokenType::STRING_LITERAL);
+
+    consume(tokenType::semicolon);
+
+    auto stmt = std::make_unique<incstmt>();
+
+    stmt->path = path;
+
+    return stmt;
+}
 
 stmtptr parser::expressionStatement() {
     ExprPtr expr = expression();
@@ -557,8 +588,13 @@ stmtptr parser::variableDeclaration() {
 
 
 stmtptr parser::declaration() {
+    if (match(tokenType::USE)) return usedecl();
+    if (match(tokenType::INC)) return incdecl();
     if (match(tokenType::FNTYPE)) return functionDeclaration();
-    if (match(tokenType::INTEGERTYPE) || match(tokenType::FLOATTYPE) || match(tokenType::CHARTYPE) || match(tokenType::BOOLTYPE)) return variableDeclaration();
+    
+    if (match(tokenType::INTEGERTYPE) || match(tokenType::FLOATTYPE) 
+    || match(tokenType::CHARTYPE) || 
+    match(tokenType::BOOLTYPE)) return variableDeclaration();
 
     return statement();
 }

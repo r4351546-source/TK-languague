@@ -67,6 +67,7 @@ enum class tokenType {
     Return,     //return
     comma,
     eof,
+    scope,      // ::
 
     //includes and use standard libraries
     //use tk::io 

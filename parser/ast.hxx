@@ -101,6 +101,13 @@ struct fnstmt : stmt {
     std::vector<stmtptr> body;
 };
 
+struct usestmt : stmt {
+    std::vector<token> path;
+};
+
+struct incstmt : stmt {
+    token path;
+};
 
 struct program {
     std::vector<stmtptr> statements;

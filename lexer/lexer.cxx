@@ -115,6 +115,13 @@ token lexer::readOperator(char op) {
         case ';':
             return {tokenType::semicolon,
                 std::string_view(src.data() + start, current - start)};
+        
+        case ':':
+            if (match(':')) {
+                return {tokenType::scope,
+                    std::string_view(src.data() + start, current - start)};
+            }
+            break;
 
         case ',':
             return {tokenType::comma,
@@ -306,17 +313,17 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
         continue;
     }
 
+    if (peek() == '"') {
+    token stringtk = readstr();
+    addToken(stringtk.TokenType, stringtk.lexeme);
+    continue;
+    }
+
     token operatorToken = readOperator(peek());
 
     if (operatorToken.TokenType != tokenType::invalid) {
-        addToken(operatorToken.TokenType, operatorToken.lexeme);
-        continue;
-    }
-    
-    if (peek() == '"') {
-        token stringtk = readstr();
-        addToken(stringtk.TokenType, stringtk.lexeme);
-        continue;
+    addToken(operatorToken.TokenType, operatorToken.lexeme);
+    continue;
     }
 
     addToken(tokenType::invalid,
@@ -333,3 +340,4 @@ std::vector<token> lexer::getFileLexer(const std::string& path) {
     std::string source = file::readFile(path);
     return mainlexer(source);
 }
+
