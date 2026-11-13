@@ -3,12 +3,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(TKlang
+project(tklc
     VERSION 1.0
     LANGUAGES CXX
 )
 
-add_executable(TKlang
+add_executable(tklc
     
     lexer/lexer.cxx
     semantic/semantic.cxx
@@ -21,7 +21,7 @@ add_executable(TKlang
     semantic/analyzer/analyzer.cxx
 )
 
-target_include_directories(TKlang PUBLIC 
+target_include_directories(tklc PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/lexer
     ${CMAKE_CURRENT_SOURCE_DIR}/semantic
     ${CMAKE_CURRENT_SOURCE_DIR}/file
