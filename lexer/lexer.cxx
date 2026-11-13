@@ -312,10 +312,17 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
         addToken(operatorToken.TokenType, operatorToken.lexeme);
         continue;
     }
+    
+    if (peek() == '"') {
+        token stringtk = readstr();
+        addToken(stringtk.TokenType, stringtk.lexeme);
+        continue;
+    }
 
     addToken(tokenType::invalid,
         std::string_view(src.data() + start, current - start));
     }
+   
     
     addToken(tokenType::eof, std::string_view());
     return tokens;
