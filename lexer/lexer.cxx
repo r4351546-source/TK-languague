@@ -202,6 +202,12 @@ token lexer::readIdentifier() {
     else if (lexeme == "false") {
         type = tokenType::FALSE;
     }
+    else if (lexeme == "use") {
+        type = tokenType::USE;
+    }
+    else if (lexeme == "inc") { 
+        type = tokenType::INC;
+    }
     
         return {type, lexeme};
 }

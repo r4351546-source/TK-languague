@@ -18,7 +18,7 @@ enum class tokenType {
     MINUS,
     MULTIPLY,
     DIVIDE,
-
+    
 
     //simile
     EQUAL,      //==
@@ -66,7 +66,15 @@ enum class tokenType {
     invalid,
     Return,     //return
     comma,
-    eof
+    eof,
+
+    //includes and use standard libraries
+    //use tk::io 
+    //inc "file.tkl"
+    //inc "file.tk"
+    //this examples
+    USE,
+    INC
 };
 
 struct token {
