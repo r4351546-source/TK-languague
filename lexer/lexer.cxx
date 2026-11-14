@@ -144,13 +144,17 @@ token lexer::readOperator(char op) {
                 std::string_view(src.data() + start, current - start)};
         
         case '&':
-            if (match('&'))
+            if (match('&')) {
             return {tokenType::AND, "&&"};
-            break;
+            }
+            return {tokenType::ref,
+                std::string_view(src.data() + start, current - start)
+            };
 
         case '|':
-            if (match('|'))
+            if (match('|')) {
             return {tokenType::OR, "||"};
+            }
             break;
     }
 
@@ -214,6 +218,15 @@ token lexer::readIdentifier() {
     }
     else if (lexeme == "inc") { 
         type = tokenType::INC;
+    }
+    else if(lexeme == "ptr") {
+        type = tokenType::ptr;
+    }
+    else if(lexeme == "new") {
+        type = tokenType::New;
+    }
+    else if(lexeme == "delete") {
+        type = tokenType::Delete;
     }
     
         return {type, lexeme};

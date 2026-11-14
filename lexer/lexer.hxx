@@ -75,7 +75,15 @@ enum class tokenType {
     //inc "file.tk"
     //this examples
     USE,
-    INC
+    INC,
+
+
+    //other            14th november 2026
+    Const,      //const
+    ptr,
+    ref,
+    New,
+    Delete        
 };
 
 struct token {
