@@ -89,6 +89,45 @@ ExprPtr parser::call() {
 }
 
 ExprPtr parser::unary() {
+    if (match(tokenType::New)) {
+
+        token type;
+
+        if (match(tokenType::INTEGERTYPE) ||
+            match(tokenType::FLOATTYPE) ||
+            match(tokenType::CHARTYPE) ||
+            match(tokenType::BOOLTYPE)) {
+
+            type = previous();
+        }
+        else {
+            throw std::runtime_error("Expected type after new");
+        }
+
+        consume(tokenType::leftparen);
+
+        ExprPtr initializer = expression();
+
+        consume(tokenType::rightparen);
+
+        auto expr = std::make_unique<newExpr>();
+
+        expr->type = type;
+        expr->initializer = std::move(initializer);
+
+        return expr;
+    }
+        if (match(tokenType::Delete)) {
+
+        ExprPtr operand = unary();
+
+        auto expr = std::make_unique<delExpr>();
+
+        expr->operand = std::move(operand);
+
+        return expr;
+    }
+
     if (match(tokenType::NOT) || 
         match(tokenType::MINUS) ||
         match(tokenType::PLUS)) {
@@ -147,6 +186,43 @@ ExprPtr parser::term() {
 
 }
 
+
+bool parser::isTypeStart() {
+    return check(tokenType::ptr) ||
+           check(tokenType::INTEGERTYPE) ||
+           check(tokenType::FLOATTYPE) ||
+           check(tokenType::CHARTYPE) ||
+           check(tokenType::BOOLTYPE) ||
+           check(tokenType::VOIDTYPE);
+}
+
+
+
+typeinfo parser::parseType() {
+    typeinfo type;
+
+    if (match(tokenType::ptr)) {
+        type.isptr = true;
+    }
+
+    if (match(tokenType::INTEGERTYPE) ||
+        match(tokenType::FLOATTYPE) ||
+        match(tokenType::CHARTYPE) ||
+        match(tokenType::BOOLTYPE) ||
+        match(tokenType::VOIDTYPE)) {
+
+        type.baseType = previous();
+    }
+    else {
+        throw std::runtime_error("Expected type");
+    }
+
+    if (match(tokenType::ref)) {
+        type.isref = true;
+    }
+
+    return type;
+}
 
 ExprPtr parser::comparison() {
     ExprPtr expr = term();
@@ -488,7 +564,7 @@ stmtptr parser::statement() {
 
 stmtptr parser::functionDeclaration() {
 
-    token returnType;
+    typeinfo returnType;
 
     if (match(tokenType::INTEGERTYPE) ||
         match(tokenType::FLOATTYPE) ||
@@ -497,7 +573,7 @@ stmtptr parser::functionDeclaration() {
         || match(tokenType::VOIDTYPE)
     ) {
 
-        returnType = previous();
+        returnType = parseType();
 
     } 
     
@@ -517,21 +593,7 @@ stmtptr parser::functionDeclaration() {
 
         do {
 
-            token paramType;
-
-            if (match(tokenType::INTEGERTYPE) ||
-                match(tokenType::FLOATTYPE) ||
-                match(tokenType::CHARTYPE) ||
-                match(tokenType::BOOLTYPE)
-                || match(tokenType::VOIDTYPE)
-            ) {
-
-                paramType = previous();
-
-            } 
-            else {
-                throw std::runtime_error("Expected parameter type");
-            }
+            typeinfo paramType = parseType();
 
             token paramName = consume(tokenType::IDENTIFIER);
 
@@ -566,7 +628,7 @@ stmtptr parser::functionDeclaration() {
 
 
 stmtptr parser::variableDeclaration() {
-    token type = previous();
+    typeinfo type = parseType();
     token name = consume(tokenType::IDENTIFIER);
 
     ExprPtr initializer = nullptr;
@@ -592,9 +654,10 @@ stmtptr parser::declaration() {
     if (match(tokenType::INC)) return incdecl();
     if (match(tokenType::FNTYPE)) return functionDeclaration();
     
-    if (match(tokenType::INTEGERTYPE) || match(tokenType::FLOATTYPE) 
-    || match(tokenType::CHARTYPE) || 
-    match(tokenType::BOOLTYPE)) return variableDeclaration();
+    if (isTypeStart()) {
+    return variableDeclaration();
+    }
+
 
     return statement();
 }

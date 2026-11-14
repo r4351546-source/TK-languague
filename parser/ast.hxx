@@ -44,8 +44,26 @@ struct callExpr : Expr {
     std::vector<ExprPtr> arguments;
 };
 
+struct newExpr : Expr {
+    token type;
+    ExprPtr initializer;
+};
+
+struct delExpr : Expr {
+    ExprPtr operand;
+};
 
 //instructs
+
+
+struct typeinfo {
+    token baseType;
+
+    bool isptr = false;
+    bool isref = false;
+};
+
+
 struct stmt {
     virtual ~stmt() = default;
 };
@@ -64,7 +82,7 @@ struct Ifstmt : stmt {
 
 struct varDeclStmt /*приклад: int x = 5;*/ : stmt {
     token name;
-    token type;
+    typeinfo type;
     ExprPtr initializer;
 };
 
@@ -89,13 +107,13 @@ struct returnstmt : stmt/*return ....;*/ {
 };
 
 struct parameters {
-    token type;
+    typeinfo type;
     token name;
 };
 
 struct fnstmt : stmt {
     token name;
-    token returnType;
+    typeinfo returnType;
     
     std::vector<parameters> parameters;
     std::vector<stmtptr> body;

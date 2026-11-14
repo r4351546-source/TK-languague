@@ -50,6 +50,10 @@ private:
     ExprPtr logicalAnd();   //done
     ExprPtr logicalOr();    //done
 
+    //other
+    typeinfo parseType();   //done
+    bool isTypeStart();     //done
+
     public:
     parser(std::vector<token>* tokens);
                              
