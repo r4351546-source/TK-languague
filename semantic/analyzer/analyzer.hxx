@@ -23,15 +23,15 @@ private:
     Type analyzeExpression(const Expr& expression);             //done      13th November 2026
 
     bool analyzeFunction(const fnstmt& function);               //done      13th November 2026     
-    bool analyzeVariable(const varDeclStmt& variable);
+    bool analyzeVariable(const varDeclStmt& variable);          //done      14th November 2026
     bool isNumeric(Type type) const;                            //done      13th November 2026
 
-    Type resolvetype(const token& type);
+    Type resolvetype(const typeinfo& type);                     //done      14th November 2026
 
     void reportError(
         const std::string& message                              //done      13th November 2026
     );
 
 public:
-    bool analyze(const program& ast);
+    bool mainanalyzer(const program& ast);
 };

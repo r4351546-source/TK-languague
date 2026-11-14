@@ -764,3 +764,119 @@ bool analyzer::analyzeFunction(const fnstmt& function)
 }
 
 
+
+Type analyzer::resolvetype(const typeinfo& type)
+{
+    // Type currently does not represent pointers/references.
+    if (type.isptr || type.isref)
+        return Type{ typekind::INVALID };
+
+    switch (type.baseType.TokenType)
+    {
+        case tokenType::INTEGERTYPE:
+            return Type{ typekind::INTEGER };
+
+        case tokenType::FLOATTYPE:
+            return Type{ typekind::FLOAT };
+
+        case tokenType::CHARTYPE:
+            return Type{ typekind::CHAR };
+
+        case tokenType::BOOLTYPE:
+            return Type{ typekind::BOOL };
+
+        case tokenType::VOIDTYPE:
+            return Type{ typekind::VOID };
+
+        default:
+            return Type{ typekind::INVALID };
+    }
+}
+
+
+
+bool analyzer::analyzeVariable(const varDeclStmt& variable)
+{
+    const std::string name(variable.name.lexeme);
+
+    // 1. перевірка імені
+    if (name.empty())
+    {
+        reportError("Variable has no name");
+        return false;
+    }
+
+    // 2. Перевірка типу
+    Type variableType = resolvetype(variable.type);
+
+    if (variableType.kind == typekind::INVALID)
+    {
+        reportError(
+            "Invalid type for variable: " + name
+        );
+
+        return false;
+    }
+
+    if (variableType.kind == typekind::VOID)
+    {
+        reportError(
+            "Variable cannot have void type: " + name
+        );
+
+        return false;
+    }
+
+    // 3. перевірка повторного оголошення
+    if (symbols.lookupcurrent(name))
+    {
+        reportError(
+            "Variable already declared: " + name
+        );
+
+        return false;
+    }
+
+    // 4. реєстрація змінної
+    symbol variableSymbol(
+        name,
+        symbolKind::VARIABLE,
+        variableType
+    );
+
+    if (!symbols.declare(variableSymbol))
+    {
+        reportError(
+            "Failed to declare variable: " + name
+        );
+
+        return false;
+    }
+
+    // 5. перевірка інціалізатора
+    if (variable.initializer)
+    {
+        Type initializerType =
+            analyzeExpression(*variable.initializer);
+
+        if (initializerType.kind == typekind::INVALID)
+            return false;
+
+        if (!tktype::isCompatible(
+                variableType,
+                initializerType))
+        {
+            reportError(
+                "Variable initialization type mismatch: expected " +
+                std::string(tktype::typeToString(variableType)) +
+                ", got " +
+                std::string(tktype::typeToString(initializerType))
+            );
+
+            return false;
+        }
+    }
+
+    return true;
+}
+
