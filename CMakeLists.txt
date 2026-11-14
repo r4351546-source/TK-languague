@@ -26,6 +26,7 @@ target_include_directories(tklc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/semantic
     ${CMAKE_CURRENT_SOURCE_DIR}/file
     ${CMAKE_CURRENT_SOURCE_DIR}/parser
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir
 )
 
 
