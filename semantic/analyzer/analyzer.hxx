@@ -33,5 +33,5 @@ private:
     );
 
 public:
-    bool mainanalyzer(const program& ast);
+    bool mainanalyzer(const program& ast);                      //done      14th November 2026
 };
