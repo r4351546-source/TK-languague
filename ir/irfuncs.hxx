@@ -20,11 +20,11 @@ private:
 public:
 
     // прив'язує генератор до IR модуля у який записуватиметься IR код
-    explicit IRBuilder(IRModule& module);
+    explicit IRBuilder(IRModule& module);                           //done      15th november
 
     // створює нову IR функцію з указаною назвою та параметрами
     // також створює для неї початковий BasicBlock
-    IRFunction* createFunction(const std::string& name);
+    IRFunction* createFunction(const std::string& name);            //done      15th november
 
     // знаходить функцію в модулі за її назвою
     // повертає nullptr, якщо функцію не знайдено

@@ -9,7 +9,8 @@ project(tklc
 )
 
 add_executable(tklc
-    
+
+    ir/ir.cxx
     lexer/lexer.cxx
     semantic/semantic.cxx
     file/file.cxx
