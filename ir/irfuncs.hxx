@@ -28,10 +28,10 @@ public:
 
     // знаходить функцію в модулі за її назвою
     // повертає nullptr, якщо функцію не знайдено
-    IRFunction* findFunction(const std::string& name);
+    IRFunction* findFunction(const std::string& name);              //done      16th november
 
     // встановлює функцію, у яку зараз генеруватиметься IR код
-    bool setCurrentFunction(const std::string& name);
+    bool setCurrentFunction(const std::string& name);               //done      16th november
 
     // створює новий BasicBlock у поточній функції
     // повертає його ідентифікатор

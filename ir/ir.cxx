@@ -73,3 +73,43 @@ IRFunction* IRBuilder::createFunction(const std::string &name) {
     return func;
 }
 
+IRFunction *IRBuilder::findFunction(const std::string &name)
+{
+    if(!module || name.empty()) {return nullptr;}
+
+    for (IRFunction& function : module->functions)
+    {
+        if (function.name == name)
+        {
+            return &function;
+        }
+    }
+
+    return nullptr;
+}
+
+
+
+bool IRBuilder::setCurrentFunction(const std::string& name)
+{
+    if (!module || name.empty())
+    {
+        return false;
+    }
+
+    IRFunction* function = findFunction(name);
+
+    if (!function)
+    {
+        return false;
+    }
+
+    currentFunction = static_cast<size_t>(
+        function - module->functions.data()
+    );
+
+    currentBlock = SIZE_MAX;
+
+    return true;
+}
+

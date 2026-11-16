@@ -881,6 +881,62 @@ bool analyzer::analyzeVariable(const varDeclStmt& variable)
 }
 
 
+bool analyzer::entryPoint(const program& ast)
+{
+    const fnstmt* entryPoint = nullptr;
+
+    for (const auto& statement : ast.statements)
+    {
+        const auto* function =
+            dynamic_cast<const fnstmt*>(statement.get());
+
+        if (!function)
+            continue;
+
+        if (function->name.lexeme != "main")
+            continue;
+
+        if (entryPoint != nullptr)
+        {
+            reportError("Multiple entry points found");
+            return false;
+        }
+
+        entryPoint = function;
+    }
+
+    if (!entryPoint)
+    {
+        reportError("Entry point 'main' not found");
+        return false;
+    }
+
+    // Перевірка типу повернення
+    if (entryPoint->returnType.baseType.TokenType
+        != tokenType::INTEGERTYPE)
+    {
+        reportError("Entry point must return int");
+        return false;
+    }
+
+    // Перевірка відсутності pointer/reference
+    if (entryPoint->returnType.isptr ||
+        entryPoint->returnType.isref)
+    {
+        reportError("Entry point cannot return pointer or reference");
+        return false;
+    }
+
+    // Перевірка параметрів
+    if (!entryPoint->parameters.empty())
+    {
+        reportError("Entry point cannot have parameters");
+        return false;
+    }
+
+    return true;
+}
+
 bool analyzer::mainanalyzer(const program& ast)
 {
     // 1. скидаємо попередній стан аналізатора
@@ -911,6 +967,13 @@ bool analyzer::mainanalyzer(const program& ast)
         if (!analyzeStatement(*statement))
         {
             valid = false;
+        }
+
+        if (!entryPoint(ast))
+        {
+        valid = false;
+
+        return valid && errorCount == 0;
         }
     }
 

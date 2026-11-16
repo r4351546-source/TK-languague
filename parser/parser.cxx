@@ -566,22 +566,13 @@ stmtptr parser::functionDeclaration() {
 
     typeinfo returnType;
 
-    if (match(tokenType::INTEGERTYPE) ||
-        match(tokenType::FLOATTYPE) ||
-        match(tokenType::CHARTYPE) ||
-        match(tokenType::BOOLTYPE)
-        || match(tokenType::VOIDTYPE)
-    ) {
-
-        returnType = parseType();
-
-    } 
-    
-    else {
-        throw std::runtime_error("Expected return type");
+    if (!isTypeStart()) {
+    throw std::runtime_error("Expected return type");
     }
 
-
+    returnType = parseType();
+    
+   
     token name = consume(tokenType::IDENTIFIER);
 
     consume(tokenType::leftparen);
