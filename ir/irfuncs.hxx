@@ -35,7 +35,7 @@ public:
 
     // створює новий BasicBlock у поточній функції
     // повертає його ідентифікатор
-    uint32_t createBlock();
+    uint32_t createBlock();                                         //done      16th november
 
     // Перемикає точку вставки інструкцій на вказаний BasicBlock
     bool setInsertPoint(uint32_t blockID);

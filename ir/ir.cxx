@@ -1,4 +1,6 @@
 #include "ir/irfuncs.hxx"
+#include <stdexcept>
+#include <limits>
 
 
 IRBuilder::IRBuilder(IRModule& module)
@@ -111,5 +113,50 @@ bool IRBuilder::setCurrentFunction(const std::string& name)
     currentBlock = SIZE_MAX;
 
     return true;
+}
+
+#include <limits>
+#include <stdexcept>
+
+uint32_t IRBuilder::createBlock()
+{
+    if (!module)
+    {
+        throw std::runtime_error(
+            "IRBuilder: module is not initialized"
+        );
+    }
+
+    if (currentFunction == SIZE_MAX ||
+        currentFunction >= module->functions.size())
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current function selected"
+        );
+    }
+
+    IRFunction& function =
+        module->functions[currentFunction];
+
+    if (function.blocks.size() >
+        std::numeric_limits<uint32_t>::max())
+    {
+        throw std::length_error(
+            "IRBuilder: too many basic blocks"
+        );
+    }
+
+    // Генеруємо ID нового блоку
+    uint32_t blockID = static_cast<uint32_t>(
+        function.blocks.size()
+    );
+
+    // Створюємо новий BasicBlock
+    function.blocks.emplace_back();
+
+    // Встановлюємо його як поточний блок
+    currentBlock = blockID;
+
+    return blockID;
 }
 
