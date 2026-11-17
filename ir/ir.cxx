@@ -160,3 +160,46 @@ uint32_t IRBuilder::createBlock()
     return blockID;
 }
 
+
+bool IRBuilder::setInsertPoint(uint32_t blockID) {
+    if(
+          !module
+        ||currentFunction == SIZE_MAX
+        ||currentFunction >= module->functions.size() 
+    ) {
+        return false;
+    }
+
+    IRFunction& function = module->functions[currentFunction];
+    
+    if (static_cast<size_t>(blockID) >= function.blocks.size())
+    {
+        return false;
+    }
+
+    currentBlock = static_cast<size_t>(blockID);
+    return true;
+
+}
+
+BasicBlock *IRBuilder::getCurrentBlock() {
+    if(
+          !module
+        ||currentFunction == SIZE_MAX
+        ||currentFunction >= module->functions.size() 
+    ) {
+        return nullptr;
+    }
+
+    IRFunction& function = module->functions[currentFunction];
+
+    if (currentBlock == SIZE_MAX ||
+        currentBlock >= function.blocks.size())
+    {
+        return nullptr;
+    }
+
+    return &function.blocks[currentBlock];
+
+
+}

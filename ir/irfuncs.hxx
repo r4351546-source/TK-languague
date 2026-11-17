@@ -38,10 +38,10 @@ public:
     uint32_t createBlock();                                         //done      16th november
 
     // Перемикає точку вставки інструкцій на вказаний BasicBlock
-    bool setInsertPoint(uint32_t blockID);
+    bool setInsertPoint(uint32_t blockID);                          //done      17th november
 
     // Отримує поточний BasicBlock
-    BasicBlock* getCurrentBlock();
+    BasicBlock* getCurrentBlock();                                  //done      17th november
 
     // Генерує новий унікальний IRValue з указаним типом
     IRValue createValue(IRType type);
