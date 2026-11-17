@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <optional>
+
 
 
 enum class IRcode {
@@ -36,7 +38,7 @@ enum class IRType {
 struct IRInstruction {
     IRcode opcode;
 
-    IRValue result;
+    std::optional<IRValue> result;
     std::vector<IRValue> operands;
 };
 

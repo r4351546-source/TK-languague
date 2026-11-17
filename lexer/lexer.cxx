@@ -3,6 +3,10 @@
 #include <cctype>
 
 char lexer::advance() {
+    if(current >= src.size()) {
+        return '\0';
+    }
+    
     return src[current++];
 }
 

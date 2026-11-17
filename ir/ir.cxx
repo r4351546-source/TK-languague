@@ -1,6 +1,7 @@
 #include "ir/irfuncs.hxx"
 #include <stdexcept>
 #include <limits>
+#include <utility>
 
 
 IRBuilder::IRBuilder(IRModule& module)
@@ -30,9 +31,9 @@ IRBuilder::IRBuilder(IRModule& module)
                     case IRcode::CALL:
                     case IRcode::CONST:
                     {
-                        if (instruction.result.id >= nextValueID)
+                        if (instruction.result->id >= nextValueID)
                         {
-                            nextValueID = instruction.result.id + 1;
+                            nextValueID = instruction.result->id + 1;
                         }
 
                         break;
@@ -47,7 +48,7 @@ IRBuilder::IRBuilder(IRModule& module)
                 {
                     if (operand.id >= nextValueID)
                     {
-                        nextValueID = operand.id + 1;
+                        nextValueID = static_cast<uint64_t>(instruction.result->id) + 1;
                     }
                 }
             }
@@ -201,5 +202,143 @@ BasicBlock *IRBuilder::getCurrentBlock() {
 
     return &function.blocks[currentBlock];
 
+
+}
+
+
+IRValue IRBuilder::createValue(IRType type) {
+    if (type == IRType::VOID) {
+        throw std::invalid_argument(
+            "IRBuilder: cannot create VOID value"
+        );
+    }
+
+    if (nextValueID > std::numeric_limits<uint64_t>::max())
+    {
+        throw std::overflow_error(
+            "IRBuilder: maximum IRValue ID reached"
+        );
+    }
+
+    return IRValue{
+        static_cast<uint32_t>(nextValueID++),
+        type
+    };
+}
+
+
+std::optional<IRValue> IRBuilder::emit(IRcode opcode,
+     const std::vector<IRValue> &operands = {})
+{
+    BasicBlock* block = getCurrentBlock();
+
+    if (!block)
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current BasicBlock"
+        );
+    }
+
+    std::optional<IRValue> result = std::nullopt;
+
+    switch (opcode)
+    {
+        case IRcode::ADD:
+        case IRcode::SUB:
+        case IRcode::MUL:
+        case IRcode::DIV:
+        {
+            if (operands.size() != 2)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: binary instruction requires 2 operands"
+                );
+            }
+
+            if (operands[0].type != operands[1].type)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: operand types do not match"
+                );
+            }
+
+            if (operands[0].type == IRType::VOID ||
+                operands[0].type == IRType::PTR)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: invalid arithmetic operand type"
+                );
+            }
+
+            result = createValue(operands[0].type);
+
+            break;
+        }
+
+        case IRcode::STORE:
+        {
+            if (operands.size() != 2)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: STORE requires 2 operands"
+                );
+            }
+
+            if (operands[0].type != IRType::PTR)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: STORE address must be PTR"
+                );
+            }
+
+            if (operands[1].type == IRType::VOID)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: cannot store VOID value"
+                );
+            }
+
+            break;
+        }
+
+        case IRcode::RET:
+        {
+            if (operands.size() > 1)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: RET accepts at most 1 operand"
+                );
+            }
+
+            if (!operands.empty() &&
+                operands[0].type == IRType::VOID)
+            {
+                throw std::invalid_argument(
+                    "IRBuilder: cannot return VOID value"
+                );
+            }
+
+            break;
+        }
+
+        default:
+        {
+            throw std::invalid_argument(
+                "IRBuilder: unsupported opcode in emit()"
+            );
+        }
+    }
+
+    IRInstruction instruction;
+
+    instruction.opcode = opcode;
+    instruction.result = result;
+    instruction.operands = operands;
+
+    block->instructions.emplace_back(
+        std::move(instruction)
+    );
+
+    return result;
 
 }

@@ -14,7 +14,7 @@ private:
     size_t currentFunction = SIZE_MAX;
     size_t currentBlock = SIZE_MAX;
 
-    uint32_t nextValueID = 0;
+    uint64_t nextValueID = 0;
     uint32_t nextBlockID = 0;
 
 public:
@@ -44,11 +44,11 @@ public:
     BasicBlock* getCurrentBlock();                                  //done      17th november
 
     // Генерує новий унікальний IRValue з указаним типом
-    IRValue createValue(IRType type);
+    IRValue createValue(IRType type);                               //done      17th november
 
     // Додає інструкцію до поточного BasicBlock
     // За потреби створює результат виконання інструкції
-    std::optional<IRValue> emit(
+    std::optional<IRValue> emit(                                    //done      17th november
         IRcode opcode,
         const std::vector<IRValue>& operands = {}
     );
