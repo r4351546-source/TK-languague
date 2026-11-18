@@ -50,12 +50,13 @@ public:
     // За потреби створює результат виконання інструкції
     std::optional<IRValue> emit(                                    //done      17th november
         IRcode opcode,
-        const std::vector<IRValue>& operands = {}
-    );
+        const std::vector<IRValue>& operands = {},
+        std::optional<IRType> resultType = std::nullopt
+    );  
 
     // генерує арифметичну інструкцію ADD, SUB, MUL або DIV
     // Повертає IRValue з результатом обчислення
-    IRValue emitBinary(
+    IRValue emitBinary(                                             //done      18th november
         IRcode opcode,
         IRValue left,
         IRValue right
@@ -63,7 +64,7 @@ public:
 
     // створює інструкцію завантаження значення з пам'яті
     // повертає IRValue із завантаженим значенням
-    IRValue emitLoad(IRValue address);
+    IRValue emitLoad(IRValue address , IRType loadedType);
 
     // створює інструкцію запису значення в пам'ять
     void emitStore(IRValue address, IRValue value);

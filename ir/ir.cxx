@@ -37,7 +37,10 @@ IRBuilder::IRBuilder(IRModule& module)
                         }
 
                         break;
-                    }
+                    }   
+
+                    
+
 
                     default:
                         break;
@@ -228,7 +231,9 @@ IRValue IRBuilder::createValue(IRType type) {
 
 
 std::optional<IRValue> IRBuilder::emit(IRcode opcode,
-     const std::vector<IRValue> &operands = {})
+     const std::vector<IRValue> &operands = {},
+     std::optional<IRType> resultType
+)
 {
     BasicBlock* block = getCurrentBlock();
 
@@ -320,6 +325,34 @@ std::optional<IRValue> IRBuilder::emit(IRcode opcode,
 
             break;
         }
+                    case IRcode::LOAD:
+                    {
+                    if (operands.size() != 1)
+                    {
+                        throw std::invalid_argument(
+                        "IRBuilder: LOAD requires exactly 1 operand"
+                        );
+                    }
+
+                    if (operands[0].type != IRType::PTR)
+                    {
+                        throw std::invalid_argument(
+                        "IRBuilder: LOAD address must be PTR"
+                        );
+                    }
+
+                if (!resultType.has_value() ||
+                    *resultType == IRType::VOID)
+                    {
+                        throw std::invalid_argument(
+                        "IRBuilder: LOAD requires a valid result type"
+                        );
+                    }
+
+    result = createValue(*resultType);
+
+    break;
+    }
 
         default:
         {
@@ -342,3 +375,49 @@ std::optional<IRValue> IRBuilder::emit(IRcode opcode,
     return result;
 
 }
+
+
+IRValue IRBuilder::emitBinary(
+    IRcode opcode,
+    IRValue left,
+    IRValue right
+)
+{
+    std::optional<IRValue> result = emit(
+        opcode,
+        {left, right}
+    );
+
+    if (!result.has_value())
+    {
+        throw std::logic_error(
+            "IRBuilder: binary instruction produced no result"
+        );
+    }
+
+    return *result;
+}
+
+
+IRValue IRBuilder::emitLoad(
+    IRValue address,
+    IRType loadedType
+)
+{
+    std::optional<IRValue> result = emit(
+        IRcode::LOAD,
+        {address},
+        loadedType
+    );
+
+    if (!result.has_value())
+    {
+        throw std::logic_error(
+            "IRBuilder: LOAD produced no result"
+        );
+    }
+
+    return *result;
+}
+
+
