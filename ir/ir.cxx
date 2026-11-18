@@ -421,3 +421,23 @@ IRValue IRBuilder::emitLoad(
 }
 
 
+
+void IRBuilder::emitStore(
+    IRValue address,
+    IRValue value
+)
+{
+    std::optional<IRValue> result = emit(
+        IRcode::STORE,
+        {address, value}
+    );
+
+    if (result.has_value())
+    {
+        throw std::logic_error(
+            "IRBuilder: STORE unexpectedly produced a result"
+        );
+    }
+}
+
+

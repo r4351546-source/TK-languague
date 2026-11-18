@@ -64,10 +64,10 @@ public:
 
     // створює інструкцію завантаження значення з пам'яті
     // повертає IRValue із завантаженим значенням
-    IRValue emitLoad(IRValue address , IRType loadedType);
+    IRValue emitLoad(IRValue address , IRType loadedType);          //done      18th november
 
     // створює інструкцію запису значення в пам'ять
-    void emitStore(IRValue address, IRValue value);
+    void emitStore(IRValue address, IRValue value);             
 
     // Створює інструкцію виклику іншої IR-функції
     // Приймає назву функції та аргументи виклику
