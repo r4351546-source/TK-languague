@@ -35,6 +35,12 @@ enum class IRType {
     PTR
 };
 
+struct IRParameter {
+    std::string name;
+    IRType type;
+    IRValue value;
+};
+
 struct IRInstruction {
     IRcode opcode;
 
@@ -53,6 +59,10 @@ struct BasicBlock {
 
 struct IRFunction {
     std::string name;
+
+    IRType returnType = IRType::VOID;
+
+    std::vector<IRParameter> parameters;
     std::vector<BasicBlock> blocks;
 };
 

@@ -441,3 +441,80 @@ void IRBuilder::emitStore(
 }
 
 
+
+std::optional<IRValue> IRBuilder::emitCall(
+    const std::string& functionName,
+    const std::vector<IRValue>& arguments
+)
+{
+    // реревіряємо поточний BasicBlock
+    BasicBlock* block = getCurrentBlock();
+
+    if (!block)
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current BasicBlock"
+        );
+    }
+
+    // шукаємо функцію
+    IRFunction* function = findFunction(functionName);
+
+    if (!function)
+    {
+        throw std::runtime_error(
+            "IRBuilder: function not found: " + functionName
+        );
+    }
+
+    //перевіряємо кількість аргументів
+    if (arguments.size() != function->parameters.size())
+    {
+        throw std::invalid_argument(
+            "IRBuilder: incorrect number of arguments"
+        );
+    }
+
+    // перевіряємо типи аргументів
+    for (size_t i = 0; i < arguments.size(); ++i)
+    {
+        if (arguments[i].type != function->parameters[i].type)
+        {
+            throw std::invalid_argument(
+                "IRBuilder: argument type mismatch"
+            );
+        }
+
+        if (arguments[i].type == IRType::VOID)
+        {
+            throw std::invalid_argument(
+                "IRBuilder: VOID cannot be an argument"
+            );
+        }
+    }
+
+    // створюємо інструкцію CALL
+    IRInstruction instruction;
+
+    instruction.opcode = IRcode::CALL;
+    instruction.operands = arguments;
+
+    // створюємо результат, якщо функція щось повертає
+    std::optional<IRValue> result = std::nullopt;
+
+    if (function->returnType != IRType::VOID)
+    {
+        result = createValue(function->returnType);
+    }
+
+    instruction.result = result;
+
+    // додаємо інструкцію до BasicBlock
+    block->instructions.emplace_back(
+        std::move(instruction)
+    );
+
+    return result;
+}
+
+

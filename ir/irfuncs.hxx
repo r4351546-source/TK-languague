@@ -67,11 +67,11 @@ public:
     IRValue emitLoad(IRValue address , IRType loadedType);          //done      18th november
 
     // створює інструкцію запису значення в пам'ять
-    void emitStore(IRValue address, IRValue value);             
+    void emitStore(IRValue address, IRValue value);                 //done      18th november   
 
     // Створює інструкцію виклику іншої IR-функції
     // Приймає назву функції та аргументи виклику
-    std::optional<IRValue> emitCall(
+    std::optional<IRValue> emitCall(                                //done      18th november
         const std::string& functionName,
         const std::vector<IRValue>& arguments
     );
