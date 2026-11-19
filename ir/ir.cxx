@@ -518,3 +518,59 @@ std::optional<IRValue> IRBuilder::emitCall(
 }
 
 
+void IRBuilder::emitReturn(std::optional<IRValue> value)
+{
+    //перевіряємо наявність поточної функції
+    if (
+        !module ||
+        currentFunction == SIZE_MAX ||
+        currentFunction >= module->functions.size()
+    )
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current function selected"
+        );
+    }
+
+    //отримуємо поточну функцію
+    const IRFunction& function =
+        module->functions[currentFunction];
+
+    //перевіряємо тип повернення
+    if (function.returnType == IRType::VOID)
+    {
+        if (value.has_value())
+        {
+            throw std::invalid_argument(
+                "IRBuilder: cannot return a value from VOID function"
+            );
+        }
+    }
+    else
+    {
+        if (!value.has_value())
+        {
+            throw std::invalid_argument(
+                "IRBuilder: missing return value"
+            );
+        }
+
+        if (value->type != function.returnType)
+        {
+            throw std::invalid_argument(
+                "IRBuilder: return type mismatch"
+            );
+        }
+    }
+
+    //створюємо список операндів
+    std::vector<IRValue> operands;
+
+    if (value.has_value())
+    {
+        operands.push_back(*value);
+    }
+
+    //генеруємо return
+    emit(IRcode::RET, operands);
+}
