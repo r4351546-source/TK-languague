@@ -574,3 +574,72 @@ void IRBuilder::emitReturn(std::optional<IRValue> value)
     //генеруємо return
     emit(IRcode::RET, operands);
 }
+
+
+void IRBuilder::emitJump(uint32_t targetBlock)
+{
+    //перевіряємо наявність поточної функції
+    if (
+        !module ||
+        currentFunction == SIZE_MAX ||
+        currentFunction >= module->functions.size()
+    )
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current function selected"
+        );
+    }
+
+    //отримуємо поточну функцію
+    IRFunction& function =
+        module->functions[currentFunction];
+
+    //перевіряємо поточний BasicBlock
+    BasicBlock* block = getCurrentBlock();
+
+    if (!block)
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current BasicBlock"
+        );
+    }
+
+    //перевіряємо існування цільового блоку
+    if (static_cast<size_t>(targetBlock) >= function.blocks.size())
+    {
+        throw std::out_of_range(
+            "IRBuilder: target BasicBlock does not exist"
+        );
+    }
+
+    //перевіряємо чи поточний блок уже завершений
+    if (!block->instructions.empty())
+    {
+        const IRcode lastOpcode =
+            block->instructions.back().opcode;
+
+        if (
+            lastOpcode == IRcode::RET ||
+            lastOpcode == IRcode::JMP ||
+            lastOpcode == IRcode::BR
+        )
+        {
+            throw std::logic_error(
+                "IRBuilder: BasicBlock already terminated"
+            );
+        }
+    }
+
+    //створюємо інструкцію JMP
+    IRInstruction instruction;
+
+    instruction.opcode = IRcode::JMP;
+    instruction.result = std::nullopt;
+    instruction.operands = {};
+    instruction.targets = {targetBlock};
+
+    //ддодаємо інструкцію до поточного BasicBlock
+    block->instructions.emplace_back(
+        std::move(instruction)
+    );
+}

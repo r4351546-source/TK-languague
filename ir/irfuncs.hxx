@@ -78,10 +78,10 @@ public:
 
     // Генерує інструкцію повернення з поточної функції
     // Може повертати значення або нічого
-    void emitReturn(std::optional<IRValue> value = std::nullopt);
+    void emitReturn(std::optional<IRValue> value = std::nullopt);   //done      19th november
 
     // Генерує безумовний перехід до іншого BasicBlock
-    void emitJump(uint32_t targetBlock);
+    void emitJump(uint32_t targetBlock);                            //done      20th november                         
 
     // Генерує умовний перехід
     // якшо умова істинна — перехід у trueBlock

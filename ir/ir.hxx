@@ -35,6 +35,12 @@ enum class IRType {
     PTR
 };
 
+struct IRValue {
+    uint32_t id;
+    IRType type;
+};
+
+
 struct IRParameter {
     std::string name;
     IRType type;
@@ -46,12 +52,10 @@ struct IRInstruction {
 
     std::optional<IRValue> result;
     std::vector<IRValue> operands;
+
+    std::vector<uint32_t> targets;
 };
 
-struct IRValue {
-    uint32_t id;
-    IRType type;
-};
 
 struct BasicBlock {
     std::vector<IRInstruction> instructions;
