@@ -33,11 +33,13 @@ IRBuilder::IRBuilder(IRModule& module)
                     case IRcode::CALL:
                     case IRcode::CONST:
                     {
+
+                        if (instruction.result.has_value()) {
                         if (instruction.result->id >= nextValueID)
                         {
                             nextValueID = instruction.result->id + 1;
                         }
-
+                        }
                         break;
                     }   
 
@@ -49,11 +51,11 @@ IRBuilder::IRBuilder(IRModule& module)
                 }
 
                 // перевіряємо ID всіх операндів
-                for (const IRValue& operand : instruction.operands)
+                    for(const IRValue& operand : instruction.operands)
                 {
                     if (operand.id >= nextValueID)
                     {
-                        nextValueID = static_cast<uint64_t>(instruction.result->id) + 1;
+                        nextValueID = static_cast<uint64_t>(operand.id) + 1;
                     }
                 }
             }
@@ -424,6 +426,84 @@ IRValue IRBuilder::emitLoad(
 
 
 
+bool IRBuilder::verifyFunction(const IRFunction& function)
+{
+    
+    if (function.blocks.empty())
+    {
+        return false;
+    }
+
+    if (function.returnType == IRType::PTR ||
+        function.returnType > IRType::PTR)
+    {
+        return false;
+    }
+
+    
+    for (const IRParameter& parameter : function.parameters)
+    {
+        if (parameter.type == IRType::VOID)
+        {
+            return false;
+        }
+
+        if (parameter.value.type != parameter.type)
+        {
+            return false;
+        }
+    }
+
+    
+    for (const BasicBlock& block : function.blocks)
+    {
+        if (!verifyBlock(block))
+        {
+            return false;
+        }
+
+        
+        for (const IRInstruction& instruction : block.instructions)
+        {
+            for (uint32_t target : instruction.targets)
+            {
+                if (static_cast<size_t>(target) >= function.blocks.size())
+                {
+                    return false;
+                }
+            }
+
+            
+            if (instruction.opcode == IRcode::RET)
+            {
+                if (function.returnType == IRType::VOID)
+                {
+                    if (!instruction.operands.empty())
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (instruction.operands.size() != 1)
+                    {
+                        return false;
+                    }
+
+                    if (instruction.operands[0].type != function.returnType)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+
+
 void IRBuilder::emitStore(
     IRValue address,
     IRValue value
@@ -730,11 +810,35 @@ void IRBuilder::emitBranch(
 
 bool IRBuilder::verifyBlock(const BasicBlock& block)
 {
-    if (block.instructions.empty())
+   BasicBlock* Block = new BasicBlock;
+   Block = getCurrentBlock();
+
+if (!Block)
+{
+    throw std::runtime_error(
+        "IRBuilder: no current BasicBlock"
+    );
+}
+
+    if (!Block->instructions.empty())
     {
-        return false;
+    const IRcode lastOpcode =
+        Block->instructions.back().opcode;
+
+    if (
+        lastOpcode == IRcode::RET ||
+        lastOpcode == IRcode::JMP ||
+        lastOpcode == IRcode::BR
+    )
+    {
+        throw std::logic_error(
+            "IRBuilder: BasicBlock already terminated"
+        );
+    }
     }
 
+        delete Block;
+        
     for (size_t i = 0; i < block.instructions.size(); ++i)
     {
         const IRInstruction& instruction =
@@ -984,33 +1088,3 @@ bool IRBuilder::verifyModule()
 }
 
 
-
-bool IRBuilder::verifyModule()
-{
-    if (!module)
-    {
-        return false;
-    }
-
-    std::unordered_set<std::string> functionNames;
-
-    for (const IRFunction& function : module->functions)
-    {
-        if (function.name.empty())
-        {
-            return false;
-        }
-
-        if (!functionNames.insert(function.name).second)
-        {
-            return false;
-        }
-
-        if (!verifyFunction(function))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}

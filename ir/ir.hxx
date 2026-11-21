@@ -3,6 +3,18 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <variant>
+
+#include <variant>
+
+using IRConst = std::variant<
+    int8_t,
+    int16_t,
+    int32_t,
+    int64_t,
+    float,
+    double
+>;
 
 
 
@@ -36,7 +48,7 @@ enum class IRType {
 };
 
 struct IRValue {
-    uint32_t id;
+    uint64_t id;
     IRType type;
 };
 

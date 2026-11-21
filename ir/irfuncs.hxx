@@ -97,8 +97,8 @@ public:
     bool verifyBlock(const BasicBlock& block);                      //done      21th november
 
     // перевіряє всі BasicBlock та інструкції функції
-    bool verifyFunction(const IRFunction& function);
+    bool verifyFunction(const IRFunction& function);                //done      21th november
 
     // перевіряє весь IRModule на структурну коректність
-    bool verifyModule();
+    bool verifyModule();                                            //done      21th november
 };
