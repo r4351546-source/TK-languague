@@ -638,8 +638,314 @@ void IRBuilder::emitJump(uint32_t targetBlock)
     instruction.operands = {};
     instruction.targets = {targetBlock};
 
-    //ддодаємо інструкцію до поточного BasicBlock
+    //додаємо інструкцію до поточного BasicBlock
     block->instructions.emplace_back(
         std::move(instruction)
+        );
+}
+
+void IRBuilder::emitBranch(
+    IRValue condition,
+    uint32_t trueBlock,
+    uint32_t falseBlock
+)
+{
+    if (
+        !module ||
+        currentFunction == SIZE_MAX ||
+        currentFunction >= module->functions.size()
+    )
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current function selected"
+        );
+    }
+
+    IRFunction& function =
+        module->functions[currentFunction];
+
+    BasicBlock* block = getCurrentBlock();
+
+    if (!block)
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current BasicBlock"
+        );
+    }
+
+    if (
+        static_cast<size_t>(trueBlock) >= function.blocks.size() ||
+        static_cast<size_t>(falseBlock) >= function.blocks.size()
+    )
+    {
+        throw std::out_of_range(
+            "IRBuilder: target BasicBlock does not exist"
+        );
+    }
+
+    if (
+        condition.type != IRType::I8 &&
+        condition.type != IRType::I16 &&
+        condition.type != IRType::I32 &&
+        condition.type != IRType::I64
+    )
+    {
+        throw std::invalid_argument(
+            "IRBuilder: invalid branch condition type"
+        );
+    }
+
+    if (!block->instructions.empty())
+    {
+        IRcode lastOpcode =
+            block->instructions.back().opcode;
+
+        if (
+            lastOpcode == IRcode::RET ||
+            lastOpcode == IRcode::JMP ||
+            lastOpcode == IRcode::BR
+        )
+        {
+            throw std::logic_error(
+                "IRBuilder: BasicBlock already terminated"
+            );
+        }
+    }
+
+    IRInstruction instruction;
+
+    instruction.opcode = IRcode::BR;
+    instruction.result = std::nullopt;
+    instruction.operands = {condition};
+    instruction.targets = {trueBlock, falseBlock};
+
+    block->instructions.emplace_back(
+        std::move(instruction)
+    );
+}
+
+
+
+bool IRBuilder::verifyBlock(const BasicBlock& block)
+{
+    if (block.instructions.empty())
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < block.instructions.size(); ++i)
+    {
+        const IRInstruction& instruction =
+            block.instructions[i];
+
+        const bool isLast =
+            i == block.instructions.size() - 1;
+
+        switch (instruction.opcode)
+        {
+            case IRcode::ADD:
+            case IRcode::SUB:
+            case IRcode::MUL:
+            case IRcode::DIV:
+            {
+                if (
+                    instruction.operands.size() != 2 ||
+                    !instruction.result.has_value() ||
+                    !instruction.targets.empty()
+                )
+                {
+                    return false;
+                }
+
+                if (
+                    instruction.operands[0].type != instruction.operands[1].type ||
+                    instruction.result->type != instruction.operands[0].type ||
+                    instruction.operands[0].type == IRType::VOID ||
+                    instruction.operands[0].type == IRType::PTR
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            case IRcode::LOAD:
+            {
+                if (
+                    instruction.operands.size() != 1 ||
+                    !instruction.result.has_value() ||
+                    !instruction.targets.empty()
+                )
+                {
+                    return false;
+                }
+
+                if (
+                    instruction.operands[0].type != IRType::PTR ||
+                    instruction.result->type == IRType::VOID
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            case IRcode::STORE:
+            {
+                if (
+                    instruction.operands.size() != 2 ||
+                    instruction.result.has_value() ||
+                    !instruction.targets.empty()
+                )
+                {
+                    return false;
+                }
+
+                if (
+                    instruction.operands[0].type != IRType::PTR ||
+                    instruction.operands[1].type == IRType::VOID
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            case IRcode::CALL:
+            {
+                if (!instruction.targets.empty())
+                {
+                    return false;
+                }
+
+                if (
+                    instruction.result.has_value() &&
+                    instruction.result->type == IRType::VOID
+                )
+                {
+                    return false;
+                }
+
+                for (const IRValue& operand : instruction.operands)
+                {
+                    if (operand.type == IRType::VOID)
+                    {
+                        return false;
+                    }
+                }
+
+                break;
+            }
+
+            case IRcode::RET:
+            {
+                if (
+                    !isLast ||
+                    instruction.result.has_value() ||
+                    !instruction.targets.empty() ||
+                    instruction.operands.size() > 1
+                )
+                {
+                    return false;
+                }
+
+                if (
+                    !instruction.operands.empty() &&
+                    instruction.operands[0].type == IRType::VOID
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            case IRcode::JMP:
+            {
+                if (
+                    !isLast ||
+                    instruction.result.has_value() ||
+                    !instruction.operands.empty() ||
+                    instruction.targets.size() != 1
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            case IRcode::BR:
+            {
+                if (
+                    !isLast ||
+                    instruction.result.has_value() ||
+                    instruction.operands.size() != 1 ||
+                    instruction.targets.size() != 2
+                )
+                {
+                    return false;
+                }
+
+                IRType conditionType =
+                    instruction.operands[0].type;
+
+                if (
+                    conditionType != IRType::I8 &&
+                    conditionType != IRType::I16 &&
+                    conditionType != IRType::I32 &&
+                    conditionType != IRType::I64
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            case IRcode::CONST:
+            {
+                if (
+                    !instruction.result.has_value() ||
+                    instruction.result->type == IRType::VOID ||
+                    !instruction.operands.empty() ||
+                    !instruction.targets.empty()
+                )
+                {
+                    return false;
+                }
+
+                break;
+            }
+
+            default:
+            {
+                return false;
+            }
+        }
+
+        if (
+            !isLast &&
+            (
+                instruction.opcode == IRcode::RET ||
+                instruction.opcode == IRcode::JMP ||
+                instruction.opcode == IRcode::BR
+            )
+        )
+        {
+            return false;
+        }
+    }
+
+    const IRcode lastOpcode =
+        block.instructions.back().opcode;
+
+    return (
+        lastOpcode == IRcode::RET ||
+        lastOpcode == IRcode::JMP ||
+        lastOpcode == IRcode::BR
     );
 }

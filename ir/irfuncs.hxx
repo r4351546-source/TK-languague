@@ -86,7 +86,7 @@ public:
     // Генерує умовний перехід
     // якшо умова істинна — перехід у trueBlock
     // інакше — у falseBlock
-    void emitBranch(
+    void emitBranch(                                                //done      21th november                              
         IRValue condition,
         uint32_t trueBlock,
         uint32_t falseBlock
@@ -94,7 +94,7 @@ public:
 
     // перевіряє коректність окремого BasicBlock
     // наприклад, наявність коректного завершення блоку
-    bool verifyBlock(const BasicBlock& block);
+    bool verifyBlock(const BasicBlock& block);                      //done      21th november
 
     // перевіряє всі BasicBlock та інструкції функції
     bool verifyFunction(const IRFunction& function);
