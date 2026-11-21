@@ -1,0 +1,17 @@
+use tklib::io;
+use tklib::string;
+inc "file.tkl"
+
+fn int main() {
+    int x = 22;
+    int u = x;
+    ptr int a = &u;         //int* a = &u;
+    int b = &x;
+    str s = "hello";
+    string i = "qwert";
+    println("hi, this syntax of TK-language");
+    println(a, &a, ".");
+    println("output: 22[address in memory] ");
+    input.get();
+    return 0;
+}
