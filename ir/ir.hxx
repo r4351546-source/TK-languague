@@ -74,8 +74,3 @@ struct IRModule {
     std::vector<IRFunction> functions;
 };
 
-struct IRParameter {
-    std::string name;
-    IRType type;
-    IRValue value;
-};

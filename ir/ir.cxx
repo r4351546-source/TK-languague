@@ -1,7 +1,9 @@
 #include "ir/irfuncs.hxx"
 #include <stdexcept>
 #include <limits>
+#include "unordered_set"
 #include <utility>
+
 
 
 IRBuilder::IRBuilder(IRModule& module)
@@ -948,4 +950,67 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
         lastOpcode == IRcode::JMP ||
         lastOpcode == IRcode::BR
     );
+}
+
+
+bool IRBuilder::verifyModule()
+{
+    if (!module)
+    {
+        return false;
+    }
+
+    std::unordered_set<std::string> functionNames;
+
+    for (const IRFunction& function : module->functions)
+    {
+        if (function.name.empty())
+        {
+            return false;
+        }
+
+        if (!functionNames.insert(function.name).second)
+        {
+            return false;
+        }
+
+        if (!verifyFunction(function))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+
+bool IRBuilder::verifyModule()
+{
+    if (!module)
+    {
+        return false;
+    }
+
+    std::unordered_set<std::string> functionNames;
+
+    for (const IRFunction& function : module->functions)
+    {
+        if (function.name.empty())
+        {
+            return false;
+        }
+
+        if (!functionNames.insert(function.name).second)
+        {
+            return false;
+        }
+
+        if (!verifyFunction(function))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
