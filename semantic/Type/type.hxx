@@ -12,6 +12,12 @@ enum class typekind {
 struct Type {
     typekind kind = typekind::INVALID;
 
+    bool isPtr = false;
+    bool isRef = false;
+
+    std::shared_ptr<Type> pointeeType;
+
+
     bool operator==(const Type& other) const {
         return kind == other.kind;
     }

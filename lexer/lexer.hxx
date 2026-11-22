@@ -39,6 +39,7 @@ enum class tokenType {
     INTEGER_LITERAL,
     FLOAT_LITERAL,
     STRING_LITERAL,
+    CHAR_LITERAL,
     
     //conditions
     IF,
@@ -88,7 +89,7 @@ enum class tokenType {
 
 struct token {
     tokenType TokenType;
-    std::string_view lexeme;
+    std::string lexeme;
     
 };
 
@@ -114,7 +115,7 @@ class lexer {
     std::size_t current = 0;
     std::size_t start = 0;    
 
-    void addToken(tokenType type, std::string_view value);
+    void addToken(tokenType type, std::string value);
 
     public:
     std::vector<token> mainlexer(const std::string& source);

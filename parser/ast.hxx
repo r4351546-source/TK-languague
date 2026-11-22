@@ -36,6 +36,7 @@ struct groupingExpr : Expr {
 
 struct assignmentExpr : Expr {
     token name;
+    token op;
     ExprPtr value;
 };
 

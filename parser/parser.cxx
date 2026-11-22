@@ -88,20 +88,26 @@ ExprPtr parser::call() {
     return expr;
 }
 
-ExprPtr parser::unary() {
-    if (match(tokenType::New)) {
-
+ExprPtr parser::unary()
+{
+    if (match(tokenType::New))
+    {
         token type;
 
-        if (match(tokenType::INTEGERTYPE) ||
+        if (
+            match(tokenType::INTEGERTYPE) ||
             match(tokenType::FLOATTYPE) ||
             match(tokenType::CHARTYPE) ||
-            match(tokenType::BOOLTYPE)) {
-
+            match(tokenType::BOOLTYPE)
+        )
+        {
             type = previous();
         }
-        else {
-            throw std::runtime_error("Expected type after new");
+        else
+        {
+            throw std::runtime_error(
+                "Expected type after new"
+            );
         }
 
         consume(tokenType::leftparen);
@@ -117,8 +123,9 @@ ExprPtr parser::unary() {
 
         return expr;
     }
-        if (match(tokenType::Delete)) {
 
+    if (match(tokenType::Delete))
+    {
         ExprPtr operand = unary();
 
         auto expr = std::make_unique<delExpr>();
@@ -128,14 +135,20 @@ ExprPtr parser::unary() {
         return expr;
     }
 
-    if (match(tokenType::NOT) || 
+    if (
+        match(tokenType::NOT) ||
         match(tokenType::MINUS) ||
-        match(tokenType::PLUS)) {
-
+        match(tokenType::PLUS) ||
+        match(tokenType::ref) ||
+        match(tokenType::MULTIPLY)
+    )
+    {
         token op = previous();
+
         ExprPtr operand = unary();
 
         auto expr = std::make_unique<UnaryExpr>();
+
         expr->op = op;
         expr->right = std::move(operand);
 
@@ -269,21 +282,39 @@ ExprPtr parser::equality() {
 }
 
 
-ExprPtr parser::assignment() {
+ExprPtr parser::assignment()
+{
     ExprPtr expr = logicalOr();
 
-    if (match(tokenType::ASSIGN)) {
-        token equals = previous();
+    if (
+        match(tokenType::ASSIGN) ||
+        match(tokenType::PLUSASSIGN) ||
+        match(tokenType::MINUSASSIGN) ||
+        match(tokenType::MULTIPLYASSIGN) ||
+        match(tokenType::DIVIDEASSIGN)
+    )
+    {
+        token op = previous();
+
         ExprPtr value = assignment();
 
-        if (auto varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
-            auto assignExpr = std::make_unique<assignmentExpr>();
-            assignExpr->name = varExpr->name;
-            assignExpr->value = std::move(value);
-            return assignExpr;
+        auto* variable =
+            dynamic_cast<VariableExpr*>(expr.get());
+
+        if (!variable)
+        {
+            throw std::runtime_error(
+                "Invalid assignment target"
+            );
         }
 
-        throw std::runtime_error("Invalid assignment target");
+        auto result = std::make_unique<assignmentExpr>();
+
+        result->name = variable->name;
+        result->op = op;
+        result->value = std::move(value);
+
+        return result;
     }
 
     return expr;
@@ -676,6 +707,8 @@ stmtptr parser::blockStatement() {
 
 
 program parser::mainparse() {
+    current = 0;
+    
     program result;
 
     while (!isAtEnd()) {

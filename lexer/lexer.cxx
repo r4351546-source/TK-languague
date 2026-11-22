@@ -7,7 +7,20 @@ char lexer::advance() {
         return '\0';
     }
     
-    return src[current++];
+    char c = src[current++];
+
+    if (c == '\n')
+    {
+        ++line;
+        column = 1;
+    }
+
+    else
+    {
+        ++column;
+    }
+
+    return c;
 }
 
 char lexer::peek() {
@@ -19,9 +32,14 @@ char lexer::peek() {
 }
 
 void lexer::skipWhitespace() {
-    while(current < src.size() && 
-    std::isspace(static_cast<unsigned char>(src[current]))) {
-        current++;
+    while (
+        current < src.size() &&
+        std::isspace(
+            static_cast<unsigned char>(peek())
+        )
+    )
+    {
+        advance();
     }
 }
 
@@ -45,114 +63,114 @@ token lexer::readOperator(char op) {
             if(peek() == '=') {
                 advance();
                 return {tokenType::EQUAL, 
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::ASSIGN,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '+':
             if(peek() == '=') {
                 advance();
                 return {tokenType::PLUSASSIGN,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::PLUS,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '-':
             if(peek() == '=') {
                 advance();
                 return {tokenType::MINUSASSIGN,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::MINUS,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '*':
             if(peek() == '=') {
                 advance();
                 return {tokenType::MULTIPLYASSIGN,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::MULTIPLY,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '/':
             if(peek() == '=') {
                 advance();
                 return {tokenType::DIVIDEASSIGN,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::DIVIDE,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         // Comparison operators
         case '!':
             if(peek() == '=') {
                 advance();
                 return {tokenType::NOTEQUAL,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::NOT,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
             break;
 
         case '<':
             if(peek() == '=') {
                 advance();
                 return {tokenType::LESSEQUAL,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::LESS,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '>':
             if(peek() == '=') {
                 advance();
                 return {tokenType::GREATEREQUAL,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             return {tokenType::GREATER,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         // Punctuation
         case ';':
             return {tokenType::semicolon,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
         
         case ':':
             if (match(':')) {
                 return {tokenType::scope,
-                    std::string_view(src.data() + start, current - start)};
+                    std::string(src.data() + start, current - start)};
             }
             break;
 
         case ',':
             return {tokenType::comma,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
                 
         case '(':
             return {tokenType::leftparen,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case ')':
             return {tokenType::rightparen,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '{':
             return {tokenType::leftbrace,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
 
         case '}':
             return {tokenType::rightbrace,
-                std::string_view(src.data() + start, current - start)};
+                std::string(src.data() + start, current - start)};
         
         case '&':
             if (match('&')) {
             return {tokenType::AND, "&&"};
             }
             return {tokenType::ref,
-                std::string_view(src.data() + start, current - start)
+                std::string(src.data() + start, current - start)
             };
 
         case '|':
@@ -163,7 +181,7 @@ token lexer::readOperator(char op) {
     }
 
     return {tokenType::invalid,
-        std::string_view(src.data() + start, current - start)};
+        std::string(src.data() + start, current - start)};
 }
 
 
@@ -174,7 +192,7 @@ token lexer::readIdentifier() {
     ) {
         advance();
     }
-    std::string_view lexeme(
+    std::string lexeme(
         src.data() + start, current - start
     );
     tokenType type = tokenType::IDENTIFIER;
@@ -271,7 +289,7 @@ token lexer::readNumber() {
         }
     }
 
-    std::string_view lexeme(
+    std::string lexeme(
         src.data() + start,
         current - start
     );
@@ -283,83 +301,152 @@ token lexer::readNumber() {
 }
 
 
-void lexer::addToken(tokenType type, std::string_view value) {
-    tokens.push_back({type, value});
+void lexer::addToken(tokenType type, std::string value) {
+    tokens.push_back({type, std::string(value)});
 }
 
 
-token lexer::readstr() {
-    advance();
+token lexer::readstr()
+{
+    advance(); // Opening quote
 
-    while (peek() != '"' && peek() != '\0') {
-        advance();
+    bool escaped = false;
+
+    while (current < src.size())
+    {
+        char c = advance();
+
+        if (escaped)
+        {
+            escaped = false;
+            continue;
+        }
+
+        if (c == '\\')
+        {
+            escaped = true;
+            continue;
+        }
+
+        if (c == '"')
+        {
+            return {
+                tokenType::STRING_LITERAL,
+                src.substr(start, current - start)
+            };
+        }
+
+        if (c == '\n')
+        {
+            return {
+                tokenType::invalid,
+                src.substr(start, current - start)
+            };
+        }
     }
 
-    if (peek() == '\0') {
-        
-        return {tokenType::invalid, std::string_view(src.data() + start, current - start)};
-    }
-
-    advance(); 
-
-    std::string_view lexeme(src.data() + start, current - start);
-    return {tokenType::STRING_LITERAL, lexeme};
+    return {
+        tokenType::invalid,
+        src.substr(start, current - start)
+    };
 }
 
-std::vector<token> lexer::mainlexer(const std::string& source) {
+std::vector<token> lexer::mainlexer(const std::string& source)
+{
     src = source;
+
     tokens.clear();
+
     current = 0;
     start = 0;
 
-    while (current < src.size()) {
-    start = current;
+    line = 1;
+    column = 1;
 
-    if (peek() == '/' &&
-    current + 1 < src.size() &&
-    src[current + 1] == '/')
+    while (current < src.size())
     {
-    skipcomment();
-    continue;
+        start = current;
+
+        // Comments
+        if (
+            peek() == '/' &&
+            current + 1 < src.size() &&
+            src[current + 1] == '/'
+        )
+        {
+            skipcomment();
+            continue;
+        }
+
+        // Whitespace
+        if (std::isspace(
+            static_cast<unsigned char>(peek())
+        ))
+        {
+            advance();
+            skipWhitespace();
+            continue;
+        }
+
+        // Identifiers and keywords
+        if (
+            std::isalpha(
+                static_cast<unsigned char>(peek())
+            ) ||
+            peek() == '_'
+        )
+        {
+            token value = readIdentifier();
+
+            addToken(
+                value.TokenType,
+                std::move(value.lexeme)
+            );
+
+            continue;
+        }
+
+        // Numbers
+        if (
+            std::isdigit(
+                static_cast<unsigned char>(peek())
+            )
+        )
+        {
+            token value = readNumber();
+
+            addToken(
+                value.TokenType,
+                std::move(value.lexeme)
+            );
+
+            continue;
+        }
+
+        // Strings
+        if (peek() == '"')
+        {
+            token value = readstr();
+
+            addToken(
+                value.TokenType,
+                std::move(value.lexeme)
+            );
+
+            continue;
+        }
+
+        // Operators and punctuation
+        token value = readOperator(peek());
+
+        addToken(
+            value.TokenType,
+            std::move(value.lexeme)
+        );
     }
 
-    if (std::isspace(static_cast<unsigned char>(peek()))) {
-        advance();
-        skipWhitespace();
-        continue;
-    }
+    addToken(tokenType::eof, "");
 
-    if (std::isalpha(static_cast<unsigned char>(peek())) || peek() == '_') {
-        token identifierToken = readIdentifier();
-        addToken(identifierToken.TokenType, identifierToken.lexeme);
-        continue;
-    }
-
-    if (std::isdigit(static_cast<unsigned char>(peek()))) {
-        token numberToken = readNumber();
-        addToken(numberToken.TokenType, numberToken.lexeme);
-        continue;
-    }
-
-    if (peek() == '"') {
-    token stringtk = readstr();
-    addToken(stringtk.TokenType, stringtk.lexeme);
-    continue;
-    }
-
-    token operatorToken = readOperator(peek());
-
-    if (operatorToken.TokenType != tokenType::invalid) {
-    addToken(operatorToken.TokenType, operatorToken.lexeme);
-    continue;
-    }
-
-    addToken(tokenType::invalid,
-        std::string_view(src.data() + start, current - start));
-    }
-   
-    
-    addToken(tokenType::eof, std::string_view());
     return tokens;
 }
 
@@ -369,4 +456,5 @@ std::vector<token> lexer::getFileLexer(const std::string& path) {
     std::string source = f.readFile(path);
     return mainlexer(source);
 }
+
 

@@ -68,6 +68,8 @@ struct IRInstruction {
     std::vector<uint32_t> targets;
 
      std::optional<IRConst> constant = std::nullopt;
+     
+     std::string callee;
 };
 
 

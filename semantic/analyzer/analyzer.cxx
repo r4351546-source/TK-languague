@@ -38,23 +38,34 @@ bool analyzer::analyzeStatement(const stmt& statement)
 
     
     if (const auto* block =
-        dynamic_cast<const Blockstmt*>(&statement))
+    dynamic_cast<const Blockstmt*>(&statement))
+{
+    symbols.enterscope();
+
+    bool valid = true;
+
+    for (const auto& child : block->statements)
     {
-        symbols.enterscope();
-
-        bool valid = true;
-
-        for (const auto& statement : block->statements)
+        if (!child)
         {
-            if (!analyzeStatement(*statement))
-                valid = false;
+            reportError(
+                "Null statement inside block"
+            );
+
+            valid = false;
+            continue;
         }
 
-        symbols.exitscope();
-
-        return valid;
+        if (!analyzeStatement(*child))
+        {
+            valid = false;
+        }
     }
 
+    symbols.exitscope();
+
+    return valid;
+}
     
     if (const auto* ifNode =
         dynamic_cast<const Ifstmt*>(&statement))
@@ -228,18 +239,17 @@ bool analyzer::analyzeStatement(const stmt& statement)
             return false;
         }
 
-        if (!tktype::isCompatible(currentReturnType, valueType))
-        {
-            reportError(
-                "return type mismatch: expected " +
-                std::string(tktype::typeToString(currentReturnType)) +
-                ", got " +
-                std::string(tktype::typeToString(valueType))
-            );
+            if (!tktype::isCompatible(currentReturnType, valueType))
+{
+    reportError(
+        "return type mismatch: expected " +
+        std::string(tktype::typeToString(currentReturnType)) +
+        ", got " +
+        std::string(tktype::typeToString(valueType))
+    );
 
-            return false;
-        }
-
+    return false;
+}
         return true;
     }
 
@@ -523,6 +533,7 @@ Type analyzer::analyzeExpression(const Expr& expression)
         }
         if(target->isconst) {
             reportError("Cannot assign to const variable: " + name);
+            return invalid;
         }
 
         return target->type;
@@ -845,6 +856,8 @@ bool analyzer::analyzeVariable(const varDeclStmt& variable)
         !variable.initializer
     ) {
         reportError("Const variable requires an initializer: " + name);
+
+        return false;
     }
 
     // 4. реєстрація змінної
@@ -981,3 +994,6 @@ bool analyzer::mainanalyzer(const program& ast)
 
     return valid && errorCount == 0;
 }
+
+
+

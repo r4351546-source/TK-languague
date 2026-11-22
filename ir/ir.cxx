@@ -264,7 +264,7 @@ IRValue IRBuilder::createValue(IRType type) {
 
 
 std::optional<IRValue> IRBuilder::emit(IRcode opcode,
-     const std::vector<IRValue> &operands = {},
+     const std::vector<IRValue> &operands,
      std::optional<IRType> resultType
 )
 {
@@ -465,8 +465,7 @@ bool IRBuilder::verifyFunction(const IRFunction& function)
         return false;
     }
 
-    if (function.returnType == IRType::PTR ||
-        function.returnType > IRType::PTR)
+    if (function.returnType > IRType::PTR)
     {
         return false;
     }
@@ -560,7 +559,8 @@ std::optional<IRValue> IRBuilder::emitCall(
     const std::vector<IRValue>& arguments
 )
 {
-    // реревіряємо поточний BasicBlock
+    ensureBlockOpen();
+
     BasicBlock* block = getCurrentBlock();
 
     if (!block)
@@ -570,7 +570,13 @@ std::optional<IRValue> IRBuilder::emitCall(
         );
     }
 
-    // шукаємо функцію
+    if (functionName.empty())
+    {
+        throw std::invalid_argument(
+            "IRBuilder: function name cannot be empty"
+        );
+    }
+
     IRFunction* function = findFunction(functionName);
 
     if (!function)
@@ -580,7 +586,6 @@ std::optional<IRValue> IRBuilder::emitCall(
         );
     }
 
-    //перевіряємо кількість аргументів
     if (arguments.size() != function->parameters.size())
     {
         throw std::invalid_argument(
@@ -588,31 +593,23 @@ std::optional<IRValue> IRBuilder::emitCall(
         );
     }
 
-    // перевіряємо типи аргументів
     for (size_t i = 0; i < arguments.size(); ++i)
     {
-        if (arguments[i].type != function->parameters[i].type)
-        {
-            throw std::invalid_argument(
-                "IRBuilder: argument type mismatch"
-            );
-        }
-
         if (arguments[i].type == IRType::VOID)
         {
             throw std::invalid_argument(
                 "IRBuilder: VOID cannot be an argument"
             );
         }
+
+        if (arguments[i].type != function->parameters[i].type)
+        {
+            throw std::invalid_argument(
+                "IRBuilder: argument type mismatch"
+            );
+        }
     }
 
-    // створюємо інструкцію CALL
-    IRInstruction instruction;
-
-    instruction.opcode = IRcode::CALL;
-    instruction.operands = arguments;
-
-    // створюємо результат, якщо функція щось повертає
     std::optional<IRValue> result = std::nullopt;
 
     if (function->returnType != IRType::VOID)
@@ -620,16 +617,19 @@ std::optional<IRValue> IRBuilder::emitCall(
         result = createValue(function->returnType);
     }
 
+    IRInstruction instruction{};
+
+    instruction.opcode = IRcode::CALL;
+    instruction.callee = functionName;
+    instruction.operands = arguments;
     instruction.result = result;
 
-    // додаємо інструкцію до BasicBlock
     block->instructions.emplace_back(
         std::move(instruction)
     );
 
     return result;
 }
-
 
 void IRBuilder::emitReturn(std::optional<IRValue> value)
 {
@@ -841,14 +841,11 @@ void IRBuilder::emitBranch(
 
 bool IRBuilder::verifyBlock(const BasicBlock& block)
 {
-   if (block.instructions.empty())
+    if (block.instructions.empty())
     {
         return false;
     }
 
-
-   
-        
     for (size_t i = 0; i < block.instructions.size(); ++i)
     {
         const IRInstruction& instruction =
@@ -867,15 +864,20 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
                 if (
                     instruction.operands.size() != 2 ||
                     !instruction.result.has_value() ||
-                    !instruction.targets.empty()
+                    !instruction.targets.empty() ||
+                    instruction.constant.has_value()
                 )
                 {
                     return false;
                 }
 
                 if (
-                    instruction.operands[0].type != instruction.operands[1].type ||
-                    instruction.result->type != instruction.operands[0].type ||
+                    instruction.operands[0].type !=
+                        instruction.operands[1].type ||
+
+                    instruction.result->type !=
+                        instruction.operands[0].type ||
+
                     instruction.operands[0].type == IRType::VOID ||
                     instruction.operands[0].type == IRType::PTR
                 )
@@ -891,7 +893,8 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
                 if (
                     instruction.operands.size() != 1 ||
                     !instruction.result.has_value() ||
-                    !instruction.targets.empty()
+                    !instruction.targets.empty() ||
+                    instruction.constant.has_value()
                 )
                 {
                     return false;
@@ -913,7 +916,8 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
                 if (
                     instruction.operands.size() != 2 ||
                     instruction.result.has_value() ||
-                    !instruction.targets.empty()
+                    !instruction.targets.empty() ||
+                    instruction.constant.has_value()
                 )
                 {
                     return false;
@@ -932,7 +936,11 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
 
             case IRcode::CALL:
             {
-                if (!instruction.targets.empty())
+                if (
+                    instruction.callee.empty() ||
+                    !instruction.targets.empty() ||
+                    instruction.constant.has_value()
+                )
                 {
                     return false;
                 }
@@ -962,7 +970,8 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
                     !isLast ||
                     instruction.result.has_value() ||
                     !instruction.targets.empty() ||
-                    instruction.operands.size() > 1
+                    instruction.operands.size() > 1 ||
+                    instruction.constant.has_value()
                 )
                 {
                     return false;
@@ -985,7 +994,8 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
                     !isLast ||
                     instruction.result.has_value() ||
                     !instruction.operands.empty() ||
-                    instruction.targets.size() != 1
+                    instruction.targets.size() != 1 ||
+                    instruction.constant.has_value()
                 )
                 {
                     return false;
@@ -1000,13 +1010,14 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
                     !isLast ||
                     instruction.result.has_value() ||
                     instruction.operands.size() != 1 ||
-                    instruction.targets.size() != 2
+                    instruction.targets.size() != 2 ||
+                    instruction.constant.has_value()
                 )
                 {
                     return false;
                 }
 
-                IRType conditionType =
+                const IRType conditionType =
                     instruction.operands[0].type;
 
                 if (
@@ -1024,18 +1035,28 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
 
             case IRcode::CONST:
             {
-                if (!instruction.constant.has_value())
+                if (
+                    !instruction.result.has_value() ||
+                    !instruction.constant.has_value() ||
+                    !instruction.operands.empty() ||
+                    !instruction.targets.empty()
+                )
                 {
-                return false;
+                    return false;
                 }
 
-            if (!isValidConstant(
-            *instruction.constant,
-            instruction.result->type
-            ))
-            {
-            return false;
-            }
+                if (
+                    instruction.result->type == IRType::VOID ||
+                    !isValidConstant(
+                        *instruction.constant,
+                        instruction.result->type
+                    )
+                )
+                {
+                    return false;
+                }
+
+                break;
             }
 
             default:
@@ -1057,51 +1078,14 @@ bool IRBuilder::verifyBlock(const BasicBlock& block)
         }
     }
 
-    if (block.instructions.empty()) {
-        return false;
-    }
-
     const IRcode lastOpcode =
         block.instructions.back().opcode;
 
-    return (
+    return
         lastOpcode == IRcode::RET ||
         lastOpcode == IRcode::JMP ||
-        lastOpcode == IRcode::BR
-    );
+        lastOpcode == IRcode::BR;
 }
-
-
-bool IRBuilder::verifyModule()
-{
-    if (!module)
-    {
-        return false;
-    }
-
-    std::unordered_set<std::string> functionNames;
-
-    for (const IRFunction& function : module->functions)
-    {
-        if (function.name.empty())
-        {
-            return false;
-        }
-
-        if (!functionNames.insert(function.name).second)
-        {
-            return false;
-        }
-
-        if (!verifyFunction(function))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 
 
 IRValue IRBuilder::emitconst(
@@ -1169,4 +1153,103 @@ void IRBuilder::ensureBlockOpen()
             "IRBuilder: BasicBlock already terminated"
         );
     }
+}
+
+
+
+bool IRBuilder::verifyModule()
+{
+    if (!module)
+    {
+        return false;
+    }
+
+    std::unordered_set<std::string> functionNames;
+
+    for (const IRFunction& function : module->functions)
+    {
+        if (function.name.empty())
+        {
+            return false;
+        }
+
+        if (!functionNames.insert(function.name).second)
+        {
+            return false;
+        }
+
+        if (!verifyFunction(function))
+        {
+            return false;
+        }
+    }
+
+    for (const IRFunction& function : module->functions)
+    {
+        for (const BasicBlock& block : function.blocks)
+        {
+            for (const IRInstruction& instruction : block.instructions)
+            {
+                if (instruction.opcode != IRcode::CALL)
+                {
+                    continue;
+                }
+
+                const IRFunction* callee = nullptr;
+
+                for (const IRFunction& candidate : module->functions)
+                {
+                    if (candidate.name == instruction.callee)
+                    {
+                        callee = &candidate;
+                        break;
+                    }
+                }
+
+                if (!callee)
+                {
+                    return false;
+                }
+
+                if (
+                    instruction.operands.size() !=
+                    callee->parameters.size()
+                )
+                {
+                    return false;
+                }
+
+                for (size_t i = 0; i < instruction.operands.size(); ++i)
+                {
+                    if (
+                        instruction.operands[i].type !=
+                        callee->parameters[i].type
+                    )
+                    {
+                        return false;
+                    }
+                }
+
+                if (callee->returnType == IRType::VOID)
+                {
+                    if (instruction.result.has_value())
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (
+                        !instruction.result.has_value() ||
+                        instruction.result->type != callee->returnType
+                    )
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
