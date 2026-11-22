@@ -307,6 +307,7 @@ void lexer::addToken(tokenType type, std::string value) {
 }
 
 
+
 token lexer::readstr()
 {
     advance(); // Opening quote
@@ -316,6 +317,14 @@ token lexer::readstr()
     while (current < src.size())
     {
         char c = advance();
+
+        if (c == '\n')
+        {
+            return {
+                tokenType::invalid,
+                src.substr(start, current - start)
+            };
+        }
 
         if (escaped)
         {
@@ -336,14 +345,6 @@ token lexer::readstr()
                 src.substr(start, current - start)
             };
         }
-
-        if (c == '\n')
-        {
-            return {
-                tokenType::invalid,
-                src.substr(start, current - start)
-            };
-        }
     }
 
     return {
@@ -351,6 +352,8 @@ token lexer::readstr()
         src.substr(start, current - start)
     };
 }
+
+
 
 token lexer::readchar()
 {

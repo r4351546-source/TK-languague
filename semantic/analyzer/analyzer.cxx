@@ -269,6 +269,7 @@ Type analyzer::analyzeExpression(const Expr& expression)
     {
         switch (literal->value.TokenType)
         {
+            
             case tokenType::INTEGER_LITERAL:
                 return Type{ typekind::INTEGER };
 
@@ -492,59 +493,93 @@ Type analyzer::analyzeExpression(const Expr& expression)
 
     
     if (const auto* assignment =
-        dynamic_cast<const assignmentExpr*>(&expression))
+    dynamic_cast<const assignmentExpr*>(&expression))
+{
+    const std::string name(assignment->name.lexeme);
+
+    symbol* target = symbols.lookup(name);
+
+    if (!target)
     {
-        const std::string name(assignment->name.lexeme);
-
-        symbol* target = symbols.lookup(name);
-
-        if (!target)
-        {
-            reportError("Undefined variable: " + name);
-            return invalid;
-        }
-
-        if (target->kind == symbolKind::FUNCTION)
-        {
-            reportError(
-                "Cannot assign to a function: " + name
-            );
-
-            return invalid;
-        }
-
-        if (!assignment->value)
-        {
-            reportError("Assignment has no value");
-            return invalid;
-        }
-
-        Type valueType = analyzeExpression(*assignment->value);
-
-        if (valueType.kind == typekind::INVALID)
-            return invalid;
-
-        if (!tktype::isCompatible(target->type, valueType))
-        {
-            reportError(
-                "Assignment type mismatch: expected " +
-                std::string(tktype::typeToString(target->type)) +
-                ", got " +
-                std::string(tktype::typeToString(valueType))
-            );
-
-            return invalid;
-        }
-        if(target->isconst) {
-            reportError("Cannot assign to const variable: " + name);
-            return invalid;
-        }
-
-        return target->type;
+        reportError("Undefined variable: " + name);
+        return invalid;
     }
 
-    
+    if (target->kind == symbolKind::FUNCTION)
+    {
+        reportError("Cannot assign to a function: " + name);
+        return invalid;
+    }
 
+    if (target->isconst)
+    {
+        reportError("Cannot assign to const variable: " + name);
+        return invalid;
+    }
+
+    if (!assignment->value)
+    {
+        reportError("Assignment has no value");
+        return invalid;
+    }
+
+    Type valueType = analyzeExpression(*assignment->value);
+
+    if (valueType.kind == typekind::INVALID)
+        return invalid;
+
+    switch (assignment->op.TokenType)
+    {
+        case tokenType::ASSIGN:
+        {
+            if (!tktype::isCompatible(target->type, valueType))
+            {
+                reportError("Assignment type mismatch");
+                return invalid;
+            }
+
+            return target->type;
+        }
+
+        case tokenType::PLUSASSIGN:
+        case tokenType::MINUSASSIGN:
+        case tokenType::MULTIPLYASSIGN:
+        case tokenType::DIVIDEASSIGN:
+        {
+            if (!isNumeric(target->type) ||
+                !isNumeric(valueType))
+            {
+                reportError(
+                    "Compound assignment requires numeric operands"
+                );
+
+                return invalid;
+            }
+
+            Type resultType =
+                target->type.kind == typekind::FLOAT ||
+                valueType.kind == typekind::FLOAT
+                ? Type{ typekind::FLOAT }
+                : Type{ typekind::INTEGER };
+
+            if (!tktype::isCompatible(target->type, resultType))
+            {
+                reportError(
+                    "Compound assignment result type mismatch"
+                );
+
+                return invalid;
+            }
+
+            return target->type;
+        }
+
+        default:
+            reportError("Unknown assignment operator");
+            return invalid;
+    }
+    }
+    
     if (const auto* call =
         dynamic_cast<const callExpr*>(&expression))
     {
