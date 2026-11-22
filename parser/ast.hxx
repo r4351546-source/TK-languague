@@ -60,7 +60,7 @@ struct delExpr : Expr {
 struct typeinfo {
     token baseType;
 
-    bool isptr = false;
+    unsigned pointerDepth = 0;
     bool isref = false;
 };
 
@@ -87,6 +87,8 @@ struct varDeclStmt /*приклад: int x = 5;*/ : stmt {
     ExprPtr initializer;
 
     bool isconst = false;
+    
+    bool isHeapAllocated = false;
 };
 
 struct whileStmt : stmt/*while(....) {....}*/ {

@@ -52,6 +52,7 @@ enum class tokenType {
     //boolean
     TRUE,
     FALSE,
+    NULLPTR,
 
     //logical
     AND,        //&&

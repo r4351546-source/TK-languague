@@ -206,6 +206,9 @@ token lexer::readIdentifier() {
     else if(lexeme == "else") {
         type = tokenType::ELSE;
     }
+    else if (lexeme == "nullptr") {
+    type = tokenType::NULLPTR;
+    }
     else if(lexeme == "while") {
         type = tokenType::WHILE;
     }

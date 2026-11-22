@@ -211,19 +211,21 @@ bool parser::isTypeStart() {
 
 
 
+    
 typeinfo parser::parseType() {
     typeinfo type;
 
-    if (match(tokenType::ptr)) {
-        type.isptr = true;
+    while (match(tokenType::ptr)) {
+        ++type.pointerDepth;
     }
 
-    if (match(tokenType::INTEGERTYPE) ||
+    if (
+        match(tokenType::INTEGERTYPE) ||
         match(tokenType::FLOATTYPE) ||
         match(tokenType::CHARTYPE) ||
         match(tokenType::BOOLTYPE) ||
-        match(tokenType::VOIDTYPE)) {
-
+        match(tokenType::VOIDTYPE)
+    ) {
         type.baseType = previous();
     }
     else {
@@ -236,6 +238,7 @@ typeinfo parser::parseType() {
 
     return type;
 }
+
 
 ExprPtr parser::comparison() {
     ExprPtr expr = term();
@@ -340,6 +343,7 @@ ExprPtr parser::primary() {
         match(tokenType::FLOAT_LITERAL)
         || match(tokenType::STRING_LITERAL)
         || match(tokenType::CHAR_LITERAL)
+        || match(tokenType::NULLPTR)
         )
      {
 

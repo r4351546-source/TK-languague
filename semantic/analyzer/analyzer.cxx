@@ -277,8 +277,10 @@ Type analyzer::analyzeExpression(const Expr& expression)
                 return Type{ typekind::FLOAT };
 
             case tokenType::CHAR_LITERAL:
-                
-            return Type{ typekind::CHAR };
+                return Type{ typekind::CHAR };
+
+            case tokenType::NULLPTR:
+                return Type{ typekind::NULLPTR };
 
             case tokenType::TRUE:
             case tokenType::FALSE:
@@ -579,7 +581,7 @@ Type analyzer::analyzeExpression(const Expr& expression)
             return invalid;
     }
     }
-    
+
     if (const auto* call =
         dynamic_cast<const callExpr*>(&expression))
     {
@@ -845,32 +847,46 @@ bool analyzer::analyzeFunction(const fnstmt& function)
 
 
 
+
 Type analyzer::resolvetype(const typeinfo& type)
 {
-    // Type currently does not represent pointers/references.
-    if (type.isptr || type.isref)
-        return Type{ typekind::INVALID };
+    Type result;
 
     switch (type.baseType.TokenType)
     {
         case tokenType::INTEGERTYPE:
-            return Type{ typekind::INTEGER };
+            result = Type{typekind::INTEGER};
+            break;
 
         case tokenType::FLOATTYPE:
-            return Type{ typekind::FLOAT };
+            result = Type{typekind::FLOAT};
+            break;
 
         case tokenType::CHARTYPE:
-            return Type{ typekind::CHAR };
+            result = Type{typekind::CHAR};
+            break;
 
         case tokenType::BOOLTYPE:
-            return Type{ typekind::BOOL };
+            result = Type{typekind::BOOL};
+            break;
 
         case tokenType::VOIDTYPE:
-            return Type{ typekind::VOID };
+            result = Type{typekind::VOID};
+            break;
 
         default:
-            return Type{ typekind::INVALID };
+            return Type{typekind::INVALID};
     }
+
+    for (unsigned i = 0; i < type.pointerDepth; ++i) {
+        result = Type::pointerTo(result);
+    }
+
+    if (type.isref) {
+        result = Type::referenceTo(result);
+    }
+
+    return result;
 }
 
 
@@ -979,10 +995,14 @@ bool analyzer::analyzeVariable(
 
 bool analyzer::entryPoint(const program& ast)
 {
-    const fnstmt* entryPoint = nullptr;
+    const fnstmt* mainFunction = nullptr;
 
+    // шукаємо main серед глобальних оголошень.
     for (const auto& statement : ast.statements)
     {
+        if (!statement)
+            continue;
+
         const auto* function =
             dynamic_cast<const fnstmt*>(statement.get());
 
@@ -992,39 +1012,37 @@ bool analyzer::entryPoint(const program& ast)
         if (function->name.lexeme != "main")
             continue;
 
-        if (entryPoint != nullptr)
+        //Перевіряємо, чи не оголошено main повторно.
+        if (mainFunction != nullptr)
         {
             reportError("Multiple entry points found");
             return false;
         }
 
-        entryPoint = function;
+        mainFunction = function;
     }
 
-    if (!entryPoint)
+    //main обов'язково має існувати.
+    if (!mainFunction)
     {
         reportError("Entry point 'main' not found");
         return false;
     }
 
-    // Перевірка типу повернення
-    if (entryPoint->returnType.baseType.TokenType
-        != tokenType::INTEGERTYPE)
+    //oтримуємо семантичний тип повернення
+    Type returnType = resolvetype(mainFunction->returnType);
+
+    //main повинна повертати саме int а не int* чи int&
+    if (returnType.kind != typekind::INTEGER ||
+        returnType.isPtr ||
+        returnType.isRef)
     {
         reportError("Entry point must return int");
         return false;
     }
 
-    // Перевірка відсутності pointer/reference
-    if (entryPoint->returnType.isptr ||
-        entryPoint->returnType.isref)
-    {
-        reportError("Entry point cannot return pointer or reference");
-        return false;
-    }
-
-    // Перевірка параметрів
-    if (!entryPoint->parameters.empty())
+    //main не повинна мати параметрів
+    if (!mainFunction->parameters.empty())
     {
         reportError("Entry point cannot have parameters");
         return false;
@@ -1032,6 +1050,7 @@ bool analyzer::entryPoint(const program& ast)
 
     return true;
 }
+
 
 bool analyzer::mainanalyzer(const program& ast)
 {
