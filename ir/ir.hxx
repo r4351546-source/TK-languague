@@ -66,6 +66,8 @@ struct IRInstruction {
     std::vector<IRValue> operands;
 
     std::vector<uint32_t> targets;
+
+     std::optional<IRConst> constant = std::nullopt;
 };
 
 
@@ -80,6 +82,8 @@ struct IRFunction {
 
     std::vector<IRParameter> parameters;
     std::vector<BasicBlock> blocks;
+
+   
 };
 
 struct IRModule {

@@ -16,7 +16,8 @@ struct symbol {
     symbol(
         const std::string& name,
         symbolKind kind,
-        Type type
+        Type type,
+        bool isConst = false
     );
 
     symbol(
@@ -32,5 +33,6 @@ struct symbol {
     Type type = Type{ typekind::INVALID };
 
     std::vector<Type> parameterTypes;
+    bool isconst = false;
 
 };

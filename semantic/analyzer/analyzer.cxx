@@ -521,10 +521,14 @@ Type analyzer::analyzeExpression(const Expr& expression)
 
             return invalid;
         }
+        if(target->isconst) {
+            reportError("Cannot assign to const variable: " + name);
+        }
 
         return target->type;
     }
 
+    
 
     if (const auto* call =
         dynamic_cast<const callExpr*>(&expression))
@@ -837,11 +841,18 @@ bool analyzer::analyzeVariable(const varDeclStmt& variable)
         return false;
     }
 
+    if(variable.isconst && 
+        !variable.initializer
+    ) {
+        reportError("Const variable requires an initializer: " + name);
+    }
+
     // 4. реєстрація змінної
     symbol variableSymbol(
         name,
         symbolKind::VARIABLE,
-        variableType
+        variableType,
+        variable.isconst
     );
 
     if (!symbols.declare(variableSymbol))

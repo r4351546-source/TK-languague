@@ -4,10 +4,12 @@
 symbol::symbol(
     const std::string& name,
     symbolKind kind,
-    Type type
+    Type type,
+    bool isConst
 ) : name(name),
       kind(kind),
-      type(type)
+      type(type),
+      isconst(isConst)
 {}
 
 symbol::symbol(

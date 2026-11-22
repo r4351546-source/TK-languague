@@ -498,10 +498,9 @@ stmtptr parser::forStatement() {
     stmtptr initializer = nullptr;
 
     if (!check(tokenType::semicolon)) {
-        if (match(tokenType::INTEGERTYPE) ||
-            match(tokenType::FLOATTYPE) ||
-            match(tokenType::CHARTYPE) ||
-            match(tokenType::BOOLTYPE)) {
+        if (check(tokenType::Const) ||
+            isTypeStart()
+    ) {
 
             initializer = variableDeclaration();
 
@@ -619,6 +618,8 @@ stmtptr parser::functionDeclaration() {
 
 
 stmtptr parser::variableDeclaration() {
+    bool isconstant = match(tokenType::Const);
+
     typeinfo type = parseType();
     token name = consume(tokenType::IDENTIFIER);
 
@@ -634,6 +635,7 @@ stmtptr parser::variableDeclaration() {
     varDecl->type = type;
     varDecl->name = name;
     varDecl->initializer = std::move(initializer);
+    varDecl->isconst = isconstant;
 
     return varDecl;
 }
@@ -645,7 +647,9 @@ stmtptr parser::declaration() {
     if (match(tokenType::INC)) return incdecl();
     if (match(tokenType::FNTYPE)) return functionDeclaration();
     
-    if (isTypeStart()) {
+    if (isTypeStart()
+        || check(tokenType::Const)
+    ) {
     return variableDeclaration();
     }
 

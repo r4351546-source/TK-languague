@@ -5,6 +5,35 @@
 #include <utility>
 
 
+static bool isValidConstant(
+    const IRConst& value,
+    IRType type
+) {
+    switch (type) {
+
+        case IRType::I8:
+            return std::holds_alternative<int8_t>(value);
+
+        case IRType::I16:
+            return std::holds_alternative<int16_t>(value);
+
+        case IRType::I32:
+            return std::holds_alternative<int32_t>(value);
+
+        case IRType::I64:
+            return std::holds_alternative<int64_t>(value);
+
+        case IRType::F32:
+            return std::holds_alternative<float>(value);
+
+        case IRType::F64:
+            return std::holds_alternative<double>(value);
+
+        default:
+            return false;
+    }
+}
+
 
 IRBuilder::IRBuilder(IRModule& module)
     : module(&module),
@@ -810,8 +839,7 @@ void IRBuilder::emitBranch(
 
 bool IRBuilder::verifyBlock(const BasicBlock& block)
 {
-   BasicBlock* Block = new BasicBlock;
-   Block = getCurrentBlock();
+   BasicBlock* Block = getCurrentBlock();
 
 if (!Block)
 {
@@ -837,7 +865,7 @@ if (!Block)
     }
     }
 
-        delete Block;
+       
         
     for (size_t i = 0; i < block.instructions.size(); ++i)
     {
@@ -1024,6 +1052,13 @@ if (!Block)
                     return false;
                 }
 
+                if (!isValidConstant(
+                *instruction.constant,
+                instruction.result->type
+                )) {
+                return false;
+            }
+
                 break;
             }
 
@@ -1088,3 +1123,36 @@ bool IRBuilder::verifyModule()
 }
 
 
+
+IRValue IRBuilder::emitconst(
+    IRConst value,
+    IRType type
+) {
+    BasicBlock* block = getCurrentBlock();
+
+    if (!block) {
+        throw std::runtime_error(
+            "IRBuilder: no current BasicBlock"
+        );
+    }
+
+    if (!isValidConstant(value, type)) {
+        throw std::invalid_argument(
+            "IRBuilder: constant type mismatch"
+        );
+    }
+
+    IRValue result = createValue(type);
+
+    IRInstruction instruction{};
+
+    instruction.opcode = IRcode::CONST;
+    instruction.result = result;
+    instruction.constant = std::move(value);
+
+    block->instructions.emplace_back(
+        std::move(instruction)
+    );
+
+    return result;
+}

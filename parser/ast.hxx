@@ -84,6 +84,8 @@ struct varDeclStmt /*приклад: int x = 5;*/ : stmt {
     token name;
     typeinfo type;
     ExprPtr initializer;
+
+    bool isconst = false;
 };
 
 struct whileStmt : stmt/*while(....) {....}*/ {

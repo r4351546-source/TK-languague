@@ -101,4 +101,10 @@ public:
 
     // перевіряє весь IRModule на структурну коректність
     bool verifyModule();                                            //done      21th november
+
+    IRValue emitconst(                                              //done      22th november
+        IRConst value,
+        IRType type 
+    );
+
 };

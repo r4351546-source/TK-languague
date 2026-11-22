@@ -193,6 +193,9 @@ token lexer::readIdentifier() {
     else if(lexeme == "int") {
         type = tokenType::INTEGERTYPE;
     }
+    else if(lexeme == "const") {
+        type = tokenType::Const;
+    }
     else if(lexeme == "char") {
         type = tokenType::CHARTYPE;
     }
