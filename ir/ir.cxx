@@ -5,6 +5,26 @@
 #include <utility>
 
 
+static bool isValidIRType(IRType type)
+{
+    switch (type)
+    {
+        case IRType::VOID:
+        case IRType::I8:
+        case IRType::I16:
+        case IRType::I32:
+        case IRType::I64:
+        case IRType::F32:
+        case IRType::F64:
+        case IRType::PTR:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+
 static bool isValidConstant(
     const IRConst& value,
     IRType type
@@ -42,56 +62,57 @@ IRBuilder::IRBuilder(IRModule& module)
       nextValueID(0),
       nextBlockID(0)
 {
-    // перевіряємо всі функції модуля
-    for (const IRFunction& function : this->module->functions)
+    auto reserveValueID =
+        [this](const IRValue& value)
     {
-        // перевіряємо всі BasicBlock поточної функції
+        if (value.id < nextValueID)
+        {
+            return;
+        }
+
+        if (
+            value.id ==
+            std::numeric_limits<uint64_t>::max()
+        )
+        {
+            nextValueID =
+                std::numeric_limits<uint64_t>::max();
+
+            return;
+        }
+
+        nextValueID = value.id + 1;
+    };
+
+    for (const IRFunction& function : module.functions)
+    {
+        // Function parameters.
+        for (const IRParameter& parameter :
+             function.parameters)
+        {
+            reserveValueID(parameter.value);
+        }
+
+        // Instruction results and operands.
         for (const BasicBlock& block : function.blocks)
         {
-            // перевіряємо всі інструкції блоку
-            for (const IRInstruction& instruction : block.instructions)
+            for (const IRInstruction& instruction :
+                 block.instructions)
             {
-                // перевіряємо ID результату інструкції
-                switch (instruction.opcode)
+                if (instruction.result.has_value())
                 {
-                    case IRcode::ADD:
-                    case IRcode::SUB:
-                    case IRcode::MUL:
-                    case IRcode::DIV:
-                    case IRcode::LOAD:
-                    case IRcode::CALL:
-                    case IRcode::CONST:
-                    {
-
-                        if (instruction.result.has_value()) {
-                        if (instruction.result->id >= nextValueID)
-                        {
-                            nextValueID = instruction.result->id + 1;
-                        }
-                        }
-                        break;
-                    }   
-
-                    
-
-
-                    default:
-                        break;
+                    reserveValueID(*instruction.result);
                 }
 
-                // перевіряємо ID всіх операндів
-                    for(const IRValue& operand : instruction.operands)
+                for (const IRValue& operand :
+                     instruction.operands)
                 {
-                    if (operand.id >= nextValueID)
-                    {
-                        nextValueID = static_cast<uint64_t>(operand.id) + 1;
-                    }
+                    reserveValueID(operand);
                 }
             }
         }
     }
 }
-
 
 IRFunction* IRBuilder::createFunction(const std::string &name) {
     if(    !module 
@@ -129,7 +150,9 @@ IRFunction *IRBuilder::findFunction(const std::string &name)
 
 
 
-bool IRBuilder::setCurrentFunction(const std::string& name)
+bool IRBuilder::setCurrentFunction(
+    const std::string& name
+)
 {
     if (!module || name.empty())
     {
@@ -147,13 +170,18 @@ bool IRBuilder::setCurrentFunction(const std::string& name)
         function - module->functions.data()
     );
 
-    currentBlock = SIZE_MAX;
+    if (function->blocks.empty())
+    {
+        currentBlock = SIZE_MAX;
+    }
+    else
+    {
+        // Select the entry block.
+        currentBlock = 0;
+    }
 
     return true;
 }
-
-#include <limits>
-#include <stdexcept>
 
 uint32_t IRBuilder::createBlock()
 {
@@ -457,22 +485,31 @@ IRValue IRBuilder::emitLoad(
 
 
 
-bool IRBuilder::verifyFunction(const IRFunction& function)
+bool IRBuilder::verifyFunction(
+    const IRFunction& function
+)
 {
-    
     if (function.blocks.empty())
     {
         return false;
     }
 
-    if (function.returnType > IRType::PTR)
+    if (!isValidIRType(function.returnType))
     {
         return false;
     }
 
-    
-    for (const IRParameter& parameter : function.parameters)
+    std::unordered_set<uint64_t> definedValueIDs;
+
+    // Verify parameters.
+    for (const IRParameter& parameter :
+         function.parameters)
     {
+        if (!isValidIRType(parameter.type))
+        {
+            return false;
+        }
+
         if (parameter.type == IRType::VOID)
         {
             return false;
@@ -482,9 +519,18 @@ bool IRBuilder::verifyFunction(const IRFunction& function)
         {
             return false;
         }
+
+        if (
+            !definedValueIDs.insert(
+                parameter.value.id
+            ).second
+        )
+        {
+            return false;
+        }
     }
 
-    
+    // Verify BasicBlocks.
     for (const BasicBlock& block : function.blocks)
     {
         if (!verifyBlock(block))
@@ -492,21 +538,69 @@ bool IRBuilder::verifyFunction(const IRFunction& function)
             return false;
         }
 
-        
-        for (const IRInstruction& instruction : block.instructions)
+        for (const IRInstruction& instruction :
+             block.instructions)
         {
-            for (uint32_t target : instruction.targets)
+            // Verify operands.
+            for (const IRValue& operand :
+                 instruction.operands)
             {
-                if (static_cast<size_t>(target) >= function.blocks.size())
+                if (!isValidIRType(operand.type))
+                {
+                    return false;
+                }
+
+                if (operand.type == IRType::VOID)
                 {
                     return false;
                 }
             }
 
-            
+            // Verify result IDs.
+            if (instruction.result.has_value())
+            {
+                const IRValue& result =
+                    *instruction.result;
+
+                if (!isValidIRType(result.type))
+                {
+                    return false;
+                }
+
+                if (result.type == IRType::VOID)
+                {
+                    return false;
+                }
+
+                if (
+                    !definedValueIDs.insert(
+                        result.id
+                    ).second
+                )
+                {
+                    return false;
+                }
+            }
+
+            // Verify jump targets.
+            for (uint32_t target :
+                 instruction.targets)
+            {
+                if (
+                    static_cast<size_t>(target) >=
+                    function.blocks.size()
+                )
+                {
+                    return false;
+                }
+            }
+
+            // Verify return instructions.
             if (instruction.opcode == IRcode::RET)
             {
-                if (function.returnType == IRType::VOID)
+                if (
+                    function.returnType == IRType::VOID
+                )
                 {
                     if (!instruction.operands.empty())
                     {
@@ -515,12 +609,17 @@ bool IRBuilder::verifyFunction(const IRFunction& function)
                 }
                 else
                 {
-                    if (instruction.operands.size() != 1)
+                    if (
+                        instruction.operands.size() != 1
+                    )
                     {
                         return false;
                     }
 
-                    if (instruction.operands[0].type != function.returnType)
+                    if (
+                        instruction.operands[0].type !=
+                        function.returnType
+                    )
                     {
                         return false;
                     }
@@ -531,7 +630,6 @@ bool IRBuilder::verifyFunction(const IRFunction& function)
 
     return true;
 }
-
 
 
 void IRBuilder::emitStore(

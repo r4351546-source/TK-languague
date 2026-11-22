@@ -339,7 +339,9 @@ ExprPtr parser::primary() {
     if (match(tokenType::INTEGER_LITERAL) ||
         match(tokenType::FLOAT_LITERAL)
         || match(tokenType::STRING_LITERAL)
-    ) {
+        || match(tokenType::CHAR_LITERAL)
+        )
+     {
 
         auto expr = std::make_unique<LiteralExpr>();
         expr->value = previous();

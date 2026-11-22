@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 enum class typekind {
     INTEGER,
@@ -19,7 +20,27 @@ struct Type {
 
 
     bool operator==(const Type& other) const {
-        return kind == other.kind;
+
+        if (
+            kind != other.kind ||
+            isPtr != other.isPtr ||
+            isRef != other.isRef
+        ) {
+            return false;
+        }
+
+        if (
+            static_cast<bool>(pointeeType) !=
+            static_cast<bool>(other.pointeeType)
+        ) {
+            return false;
+        }
+
+        if (!pointeeType) {
+            return true;
+        }
+
+        return *pointeeType == *other.pointeeType;
     }
 
     bool operator!=(const Type& other) const {

@@ -33,6 +33,10 @@ private:
         const std::string& message                              //done      13th November 2026
     );
 
+    bool statementAlwaysReturns(
+    const stmt& statement
+    ) const;
+
 public:
     bool mainanalyzer(const program& ast);                      //done      14th November 2026
 };

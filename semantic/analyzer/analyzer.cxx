@@ -275,6 +275,10 @@ Type analyzer::analyzeExpression(const Expr& expression)
             case tokenType::FLOAT_LITERAL:
                 return Type{ typekind::FLOAT };
 
+            case tokenType::CHAR_LITERAL:
+                
+            return Type{ typekind::CHAR };
+
             case tokenType::TRUE:
             case tokenType::FALSE:
                 return Type{ typekind::BOOL };
@@ -768,6 +772,32 @@ bool analyzer::analyzeFunction(const fnstmt& function)
         }
     }
 
+        if (returnType.kind != typekind::VOID)
+{
+    bool definitelyReturns = false;
+
+    for (const auto& statement : function.body)
+    {
+        if (
+            statement &&
+            statementAlwaysReturns(*statement)
+        )
+        {
+            definitelyReturns = true;
+            break;
+        }
+    }
+
+    if (!definitelyReturns)
+    {
+        reportError(
+            "Non-void function may finish without returning: " +
+            name
+        );
+
+        valid = false;
+    }
+    }
     
     symbols.exitscope();
 
@@ -810,18 +840,18 @@ Type analyzer::resolvetype(const typeinfo& type)
 
 
 
-bool analyzer::analyzeVariable(const varDeclStmt& variable)
+bool analyzer::analyzeVariable(
+    const varDeclStmt& variable
+)
 {
     const std::string name(variable.name.lexeme);
 
-    // 1. перевірка імені
     if (name.empty())
     {
         reportError("Variable has no name");
         return false;
     }
 
-    // 2. Перевірка типу
     Type variableType = resolvetype(variable.type);
 
     if (variableType.kind == typekind::INVALID)
@@ -842,7 +872,6 @@ bool analyzer::analyzeVariable(const varDeclStmt& variable)
         return false;
     }
 
-    // 3. перевірка повторного оголошення
     if (symbols.lookupcurrent(name))
     {
         reportError(
@@ -852,15 +881,47 @@ bool analyzer::analyzeVariable(const varDeclStmt& variable)
         return false;
     }
 
-    if(variable.isconst && 
-        !variable.initializer
-    ) {
-        reportError("Const variable requires an initializer: " + name);
+    if (variable.isconst && !variable.initializer)
+    {
+        reportError(
+            "Const variable requires an initializer: " + name
+        );
 
         return false;
     }
 
-    // 4. реєстрація змінної
+    // Analyze initializer BEFORE declaring the variable.
+    if (variable.initializer)
+    {
+        Type initializerType =
+            analyzeExpression(*variable.initializer);
+
+        if (initializerType.kind == typekind::INVALID)
+        {
+            return false;
+        }
+
+        if (!tktype::isCompatible(
+            variableType,
+            initializerType
+        ))
+        {
+            reportError(
+                "Variable initialization type mismatch: expected " +
+                std::string(
+                    tktype::typeToString(variableType)
+                ) +
+                ", got " +
+                std::string(
+                    tktype::typeToString(initializerType)
+                )
+            );
+
+            return false;
+        }
+    }
+
+    // Declare only after successful validation.
     symbol variableSymbol(
         name,
         symbolKind::VARIABLE,
@@ -875,30 +936,6 @@ bool analyzer::analyzeVariable(const varDeclStmt& variable)
         );
 
         return false;
-    }
-
-    // 5. перевірка інціалізатора
-    if (variable.initializer)
-    {
-        Type initializerType =
-            analyzeExpression(*variable.initializer);
-
-        if (initializerType.kind == typekind::INVALID)
-            return false;
-
-        if (!tktype::isCompatible(
-                variableType,
-                initializerType))
-        {
-            reportError(
-                "Variable initialization type mismatch: expected " +
-                std::string(tktype::typeToString(variableType)) +
-                ", got " +
-                std::string(tktype::typeToString(initializerType))
-            );
-
-            return false;
-        }
     }
 
     return true;
@@ -996,4 +1033,52 @@ bool analyzer::mainanalyzer(const program& ast)
 }
 
 
+
+bool analyzer::statementAlwaysReturns(
+    const stmt& statement
+) const
+{
+    if (
+        dynamic_cast<const returnstmt*>(&statement)
+    )
+    {
+        return true;
+    }
+
+    if (
+        const auto* block =
+            dynamic_cast<const Blockstmt*>(&statement)
+    )
+    {
+        for (const auto& child : block->statements)
+        {
+            if (
+                child &&
+                statementAlwaysReturns(*child)
+            )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    if (
+        const auto* ifNode =
+            dynamic_cast<const Ifstmt*>(&statement)
+    )
+    {
+        if (!ifNode->thenBranch || !ifNode->elseBranch)
+        {
+            return false;
+        }
+
+        return
+            statementAlwaysReturns(*ifNode->thenBranch) &&
+            statementAlwaysReturns(*ifNode->elseBranch);
+    }
+
+    return false;
+}
 

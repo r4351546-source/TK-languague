@@ -109,6 +109,7 @@ class lexer {
     token readNumber();
     token readOperator(char op);
     token readstr();
+    token readchar();
 
     int line = 1;
     int column = 1;

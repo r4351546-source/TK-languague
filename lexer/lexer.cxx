@@ -1,6 +1,7 @@
 #include "lexer.hxx"
 #include "../file/file.hxx"
 #include <cctype>
+#include <utility>
 
 char lexer::advance() {
     if(current >= src.size()) {
@@ -351,6 +352,84 @@ token lexer::readstr()
     };
 }
 
+token lexer::readchar()
+{
+    advance();              //opening '
+
+    bool valid = true;
+
+    if (
+        current >= src.size() ||
+        peek() == '\n' ||
+        peek() == '\''
+    )
+    {
+        valid = false;
+    }
+    else
+    {
+        char value = advance();
+
+        if (value == '\\')
+        {
+            if (
+                current >= src.size() ||
+                peek() == '\n'
+            )
+            {
+                valid = false;
+            }
+            else
+            {
+                char escaped = advance();
+
+                switch (escaped)
+                {
+                    case '\'':
+                    case '\\':
+                    case 'n':
+                    case 't':
+                    case 'r':
+                    case '0':
+                        break;
+
+                    default:
+                        valid = false;
+                        break;
+                }
+            }
+        }
+    }
+
+    if (!match('\''))
+    {
+        valid = false;
+
+        // Consume malformed character literal.
+        while (
+            current < src.size() &&
+            peek() != '\n' &&
+            peek() != '\''
+        )
+        {
+            advance();
+        }
+
+        if (peek() == '\'')
+        {
+            advance();
+        }
+    }
+
+    return {
+        valid
+            ? tokenType::CHAR_LITERAL
+            : tokenType::invalid,
+
+        src.substr(start, current - start)
+    };
+}
+
 std::vector<token> lexer::mainlexer(const std::string& source)
 {
     src = source;
@@ -434,6 +513,19 @@ std::vector<token> lexer::mainlexer(const std::string& source)
             );
 
             continue;
+        }
+
+        // Character literals
+        if (peek() == '\'')
+        {
+        token value = readchar();
+
+            addToken(
+            value.TokenType,
+            std::move(value.lexeme)
+            );
+
+        continue;
         }
 
         // Operators and punctuation
