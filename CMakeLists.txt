@@ -1,4 +1,4 @@
-cmake_minimum_required(3.20)
+cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -12,14 +12,14 @@ add_executable(tklc
 
     ir/ir.cxx
     lexer/lexer.cxx
-    semantic/semantic.cxx
+    
     file/file.cxx
     parser/parser.cxx
     semantic/analyzer/analyzer.cxx
     semantic/symboltable/smb.cxx
     semantic/symbol/symbol.cxx
     semantic/Type/type.cxx
-    semantic/analyzer/analyzer.cxx
+    
 )
 
 target_include_directories(tklc PUBLIC 

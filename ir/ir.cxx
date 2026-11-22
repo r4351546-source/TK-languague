@@ -249,7 +249,7 @@ IRValue IRBuilder::createValue(IRType type) {
         );
     }
 
-    if (nextValueID > std::numeric_limits<uint64_t>::max())
+    if (nextValueID == std::numeric_limits<uint64_t>::max())
     {
         throw std::overflow_error(
             "IRBuilder: maximum IRValue ID reached"
@@ -257,7 +257,7 @@ IRValue IRBuilder::createValue(IRType type) {
     }
 
     return IRValue{
-        static_cast<uint32_t>(nextValueID++),
+        static_cast<uint64_t>(nextValueID++),
         type
     };
 }
@@ -268,6 +268,7 @@ std::optional<IRValue> IRBuilder::emit(IRcode opcode,
      std::optional<IRType> resultType
 )
 {
+    ensureBlockOpen();
     BasicBlock* block = getCurrentBlock();
 
     if (!block)
@@ -416,6 +417,7 @@ IRValue IRBuilder::emitBinary(
     IRValue right
 )
 {
+    ensureBlockOpen();
     std::optional<IRValue> result = emit(
         opcode,
         {left, right}
@@ -839,33 +841,13 @@ void IRBuilder::emitBranch(
 
 bool IRBuilder::verifyBlock(const BasicBlock& block)
 {
-   BasicBlock* Block = getCurrentBlock();
-
-if (!Block)
-{
-    throw std::runtime_error(
-        "IRBuilder: no current BasicBlock"
-    );
-}
-
-    if (!Block->instructions.empty())
+   if (block.instructions.empty())
     {
-    const IRcode lastOpcode =
-        Block->instructions.back().opcode;
-
-    if (
-        lastOpcode == IRcode::RET ||
-        lastOpcode == IRcode::JMP ||
-        lastOpcode == IRcode::BR
-    )
-    {
-        throw std::logic_error(
-            "IRBuilder: BasicBlock already terminated"
-        );
-    }
+        return false;
     }
 
-       
+
+   
         
     for (size_t i = 0; i < block.instructions.size(); ++i)
     {
@@ -1042,24 +1024,18 @@ if (!Block)
 
             case IRcode::CONST:
             {
-                if (
-                    !instruction.result.has_value() ||
-                    instruction.result->type == IRType::VOID ||
-                    !instruction.operands.empty() ||
-                    !instruction.targets.empty()
-                )
+                if (!instruction.constant.has_value())
                 {
-                    return false;
+                return false;
                 }
 
-                if (!isValidConstant(
-                *instruction.constant,
-                instruction.result->type
-                )) {
-                return false;
+            if (!isValidConstant(
+            *instruction.constant,
+            instruction.result->type
+            ))
+            {
+            return false;
             }
-
-                break;
             }
 
             default:
@@ -1079,6 +1055,10 @@ if (!Block)
         {
             return false;
         }
+    }
+
+    if (block.instructions.empty()) {
+        return false;
     }
 
     const IRcode lastOpcode =
@@ -1128,6 +1108,7 @@ IRValue IRBuilder::emitconst(
     IRConst value,
     IRType type
 ) {
+    ensureBlockOpen();
     BasicBlock* block = getCurrentBlock();
 
     if (!block) {
@@ -1155,4 +1136,37 @@ IRValue IRBuilder::emitconst(
     );
 
     return result;
+}
+
+
+
+void IRBuilder::ensureBlockOpen()
+{
+    BasicBlock* block = getCurrentBlock();
+
+    if (!block)
+    {
+        throw std::runtime_error(
+            "IRBuilder: no current BasicBlock"
+        );
+    }
+
+    if (block->instructions.empty())
+    {
+        return;
+    }
+
+    const IRcode lastOpcode =
+        block->instructions.back().opcode;
+
+    if (
+        lastOpcode == IRcode::RET ||
+        lastOpcode == IRcode::JMP ||
+        lastOpcode == IRcode::BR
+    )
+    {
+        throw std::logic_error(
+            "IRBuilder: BasicBlock already terminated"
+        );
+    }
 }

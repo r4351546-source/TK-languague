@@ -315,6 +315,14 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
     while (current < src.size()) {
     start = current;
 
+    if (peek() == '/' &&
+    current + 1 < src.size() &&
+    src[current + 1] == '/')
+    {
+    skipcomment();
+    continue;
+    }
+
     if (std::isspace(static_cast<unsigned char>(peek()))) {
         advance();
         skipWhitespace();
@@ -357,7 +365,8 @@ std::vector<token> lexer::mainlexer(const std::string& source) {
 
 
 std::vector<token> lexer::getFileLexer(const std::string& path) {
-    std::string source = file::readFile(path);
+    file f;
+    std::string source = f.readFile(path);
     return mainlexer(source);
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parser/ast.hxx"
+#include "ast.hxx"
 
 #include "Type/type.hxx"
 #include "symbol/symbol.hxx"

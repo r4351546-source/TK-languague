@@ -6,7 +6,7 @@
 #include <filesystem>
 
 
-static std::string readFile(const std::string& path) {
+std::string file::readFile(const std::string& path) {
     // Check file extension
     std::filesystem::path filepath(path);
     std::string extension = filepath.extension().string();
@@ -19,7 +19,7 @@ static std::string readFile(const std::string& path) {
     }
 
     // Open file
-    std::ifstream input(path);
+    std::ifstream input(path, std::ios::binary);
 
     if (!input.is_open()) {
         throw std::runtime_error("Cannot open file: " + path);
@@ -28,6 +28,13 @@ static std::string readFile(const std::string& path) {
     // Read file
     std::stringstream buffer;
     buffer << input.rdbuf();
+
+    if (input.bad())
+    {
+        throw std::runtime_error(
+            "Failed to read file: " + path
+        );
+    }
 
     return buffer.str();
 }

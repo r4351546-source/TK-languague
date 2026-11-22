@@ -950,44 +950,34 @@ bool analyzer::entryPoint(const program& ast)
 
 bool analyzer::mainanalyzer(const program& ast)
 {
-    // 1. скидаємо попередній стан аналізатора
     symbols = smbTable{};
 
     currentReturnType = Type{ typekind::INVALID };
     insideFunction = false;
     loopDepth = 0;
-
     errorCount = 0;
 
-    // 2. загальний результат аналізу
     bool valid = true;
 
-    // 3. проходимо всі оператори програми
     for (const auto& statement : ast.statements)
     {
-        // 4. перевіряємо валідність вузла
         if (!statement)
         {
             reportError("Null statement in program");
-
             valid = false;
             continue;
         }
 
-        // 5. Передаємо оператор відповідному аналізатору
         if (!analyzeStatement(*statement))
         {
             valid = false;
         }
-
-        if (!entryPoint(ast))
-        {
-        valid = false;
-
-        return valid && errorCount == 0;
-        }
     }
 
-    // 6. повертаємо загальний результат
+    if (!entryPoint(ast))
+    {
+        valid = false;
+    }
+
     return valid && errorCount == 0;
 }

@@ -107,4 +107,7 @@ public:
         IRType type 
     );
 
+    private:
+    void ensureBlockOpen();
+
 };
