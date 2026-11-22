@@ -494,38 +494,70 @@ Type analyzer::analyzeExpression(const Expr& expression)
     }
 
     
-    if (const auto* assignment =
+    
+if (const auto* assignment =
     dynamic_cast<const assignmentExpr*>(&expression))
 {
-    const std::string name(assignment->name.lexeme);
-
-    symbol* target = symbols.lookup(name);
-
-    if (!target)
+    if (!assignment->target || !assignment->value)
     {
-        reportError("Undefined variable: " + name);
+        reportError("Assignment has missing target or value");
         return invalid;
     }
 
-    if (target->kind == symbolKind::FUNCTION)
-    {
-        reportError("Cannot assign to a function: " + name);
+    // Визначаємо тип цілі присвоєння.
+    Type targetType =
+        analyzeExpression(*assignment->target);
+
+    if (targetType.kind == typekind::INVALID)
         return invalid;
+
+    // Перевіряємо const для звичайної змінної.
+    const Expr* targetExpr = assignment->target.get();
+
+    // Знімаємо дужки, якщо вони є.
+    while (const auto* grouping =
+        dynamic_cast<const groupingExpr*>(targetExpr))
+    {
+        if (!grouping->expression)
+            return invalid;
+
+        targetExpr = grouping->expression.get();
     }
 
-    if (target->isconst)
+    if (const auto* variable =
+        dynamic_cast<const VariableExpr*>(targetExpr))
     {
-        reportError("Cannot assign to const variable: " + name);
-        return invalid;
+        symbol* found = symbols.lookup(variable->name.lexeme);
+
+        if (!found)
+        {
+            reportError(
+                "Undefined variable: " + variable->name.lexeme
+            );
+            return invalid;
+        }
+
+        if (found->kind == symbolKind::FUNCTION)
+        {
+            reportError(
+                "Cannot assign to a function: " +
+                variable->name.lexeme
+            );
+            return invalid;
+        }
+
+        if (found->isconst)
+        {
+            reportError(
+                "Cannot assign to const variable: " +
+                variable->name.lexeme
+            );
+            return invalid;
+        }
     }
 
-    if (!assignment->value)
-    {
-        reportError("Assignment has no value");
-        return invalid;
-    }
-
-    Type valueType = analyzeExpression(*assignment->value);
+    Type valueType =
+        analyzeExpression(*assignment->value);
 
     if (valueType.kind == typekind::INVALID)
         return invalid;
@@ -534,13 +566,13 @@ Type analyzer::analyzeExpression(const Expr& expression)
     {
         case tokenType::ASSIGN:
         {
-            if (!tktype::isCompatible(target->type, valueType))
+            if (!tktype::isCompatible(targetType, valueType))
             {
                 reportError("Assignment type mismatch");
                 return invalid;
             }
 
-            return target->type;
+            return targetType;
         }
 
         case tokenType::PLUSASSIGN:
@@ -548,8 +580,10 @@ Type analyzer::analyzeExpression(const Expr& expression)
         case tokenType::MULTIPLYASSIGN:
         case tokenType::DIVIDEASSIGN:
         {
-            if (!isNumeric(target->type) ||
-                !isNumeric(valueType))
+            if (
+                !isNumeric(targetType) ||
+                !isNumeric(valueType)
+            )
             {
                 reportError(
                     "Compound assignment requires numeric operands"
@@ -559,12 +593,12 @@ Type analyzer::analyzeExpression(const Expr& expression)
             }
 
             Type resultType =
-                target->type.kind == typekind::FLOAT ||
+                targetType.kind == typekind::FLOAT ||
                 valueType.kind == typekind::FLOAT
-                ? Type{ typekind::FLOAT }
-                : Type{ typekind::INTEGER };
+                ? Type{typekind::FLOAT}
+                : Type{typekind::INTEGER};
 
-            if (!tktype::isCompatible(target->type, resultType))
+            if (!tktype::isCompatible(targetType, resultType))
             {
                 reportError(
                     "Compound assignment result type mismatch"
@@ -573,14 +607,14 @@ Type analyzer::analyzeExpression(const Expr& expression)
                 return invalid;
             }
 
-            return target->type;
+            return targetType;
         }
 
         default:
             reportError("Unknown assignment operator");
             return invalid;
     }
-    }
+}
 
     if (const auto* call =
         dynamic_cast<const callExpr*>(&expression))

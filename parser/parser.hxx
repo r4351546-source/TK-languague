@@ -50,9 +50,15 @@ private:
     ExprPtr logicalAnd();   //done
     ExprPtr logicalOr();    //done
 
+    stmtptr heapAllocationDeclaration();
+    bool isHeapAllocationDeclaration() const;
+    bool isPostfixDereference() const;
+    bool isAssignmentTarget(const Expr& expression) const;
+
     //other
     typeinfo parseType();   //done
     bool isTypeStart();     //done
+    bool isAssignmentTarget(const Expr& expression) const;
 
     public:
     parser(std::vector<token>* tokens);

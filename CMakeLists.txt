@@ -12,6 +12,7 @@ add_executable(tklc
 
     ir/ir.cxx
     lexer/lexer.cxx
+    parser/memory.cxx
     
     file/file.cxx
     parser/parser.cxx

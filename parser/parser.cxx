@@ -64,25 +64,54 @@ token parser::consume(tokenType type) {
     throw std::runtime_error("unexpected token");
 }
 
-ExprPtr parser::call() {
+ExprPtr parser::call()
+{
     ExprPtr expr = primary();
 
-    while (match(tokenType::leftparen)) {
-        std::vector<ExprPtr> arguments;
+    while (true)
+    {
+        //простий виклик функції
+        if (match(tokenType::leftparen))
+        {
+            std::vector<ExprPtr> arguments;
 
-        if (!check(tokenType::rightparen)) {
-            do {
-                arguments.push_back(expression());
-            } while (match(tokenType::comma));
+            if (!check(tokenType::rightparen))
+            {
+                do
+                {
+                    arguments.push_back(expression());
+                }
+                while (match(tokenType::comma));
+            }
+
+            consume(tokenType::rightparen);
+
+            auto call = std::make_unique<callExpr>();
+
+            call->callee = std::move(expr);
+            call->arguments = std::move(arguments);
+
+            expr = std::move(call);
+
+            continue;
         }
 
-        consume(tokenType::rightparen);
+        //ппостфіксне розіменування p*
+        if (isPostfixDereference())
+        {
+            token op = advance();
 
-        auto CallExpr = std::make_unique<callExpr>();
-        CallExpr->callee = std::move(expr);
-        CallExpr->arguments = std::move(arguments);
+            auto unary = std::make_unique<UnaryExpr>();
 
-        expr = std::move(CallExpr);
+            unary->op = op;
+            unary->right = std::move(expr);
+
+            expr = std::move(unary);
+
+            continue;
+        }
+
+        break;
     }
 
     return expr;
@@ -285,10 +314,41 @@ ExprPtr parser::equality() {
 }
 
 
+bool parser::isAssignmentTarget(
+    const Expr& expression
+) const
+{
+    //звичайна змінна: x = 10
+    if (dynamic_cast<const VariableExpr*>(&expression))
+        return true;
+
+    //розіменування: *p = 10 або p* = 10
+    if (const auto* unary =
+        dynamic_cast<const UnaryExpr*>(&expression))
+    {
+        return unary->op.TokenType == tokenType::MULTIPLY;
+    }
+
+    //дужки не повинні змінювати можливість присвоєння
+    //наприклад (*p) = 10
+    if (const auto* grouping =
+        dynamic_cast<const groupingExpr*>(&expression))
+    {
+        return grouping->expression &&
+               isAssignmentTarget(*grouping->expression);
+    }
+
+    return false;
+}
+
+
+
 ExprPtr parser::assignment()
 {
+    //спочатку парсимо вираз який може стати ціллю
     ExprPtr expr = logicalOr();
 
+    //перевіряємо чи зустріли оператор присвоєння
     if (
         match(tokenType::ASSIGN) ||
         match(tokenType::PLUSASSIGN) ||
@@ -299,22 +359,23 @@ ExprPtr parser::assignment()
     {
         token op = previous();
 
-        ExprPtr value = assignment();
-
-        auto* variable =
-            dynamic_cast<VariableExpr*>(expr.get());
-
-        if (!variable)
+        //перевіряємо ліву частину
+        if (!isAssignmentTarget(*expr))
         {
             throw std::runtime_error(
                 "Invalid assignment target"
             );
         }
 
+        //екурсивно парсимо праву частину
+        ExprPtr value = assignment();
+
+        //створюємо вузол AST
         auto result = std::make_unique<assignmentExpr>();
 
-        result->name = variable->name;
+        result->target = std::move(expr);
         result->op = op;
+  
         result->value = std::move(value);
 
         return result;
@@ -680,6 +741,12 @@ stmtptr parser::variableDeclaration() {
 
 
 stmtptr parser::declaration() {
+    if (isHeapAllocationDeclaration())
+    {
+    advance();
+    return heapAllocationDeclaration();
+    }   
+
     if (match(tokenType::USE)) return usedecl();
     if (match(tokenType::INC)) return incdecl();
     if (match(tokenType::FNTYPE)) return functionDeclaration();

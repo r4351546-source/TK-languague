@@ -16,6 +16,7 @@ struct LiteralExpr : Expr {
 };
 
 struct VariableExpr : Expr {
+    ExprPtr target;
     token name;
 };
 
@@ -35,7 +36,7 @@ struct groupingExpr : Expr {
 };
 
 struct assignmentExpr : Expr {
-    token name;
+    ExprPtr target;
     token op;
     ExprPtr value;
 };
