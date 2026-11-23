@@ -53,7 +53,7 @@ private:
     stmtptr heapAllocationDeclaration();
     bool isHeapAllocationDeclaration() const;
     bool isPostfixDereference() const;
-    bool isAssignmentTarget(const Expr& expression) const;
+   
 
     //other
     typeinfo parseType();   //done
