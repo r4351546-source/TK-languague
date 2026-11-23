@@ -50,7 +50,7 @@ if(BUILD_TESTING)
     )
 
 
-    target_include_directories(lexer_tests PRIVATE
+    target_include_directories(lexer_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/lexer
         ${CMAKE_CURRENT_SOURCE_DIR}/file
     )

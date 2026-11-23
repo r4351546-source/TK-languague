@@ -77,7 +77,7 @@ int main() {
             {tokenType::Return, "return"},
             {tokenType::TRUE, "true"},
             {tokenType::FALSE, "false"},
-            {tokenType::NULLPTR, "nullpointer"},
+            {tokenType::NULLPTR, "nullptr"},
             {tokenType::USE, "use"},
             {tokenType::INC, "inc"},
             {tokenType::Const, "const"},
@@ -89,7 +89,7 @@ int main() {
 
     
     expectTokens(scanner, "identifiers",
-        "alpha _private value2 _x9 foo_bar123",
+        "tre da tas linux os_Sss9",
         {
             {tokenType::IDENTIFIER, "tre"},
             {tokenType::IDENTIFIER, "da"},
