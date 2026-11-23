@@ -33,3 +33,27 @@ target_include_directories(tklc PUBLIC
 )
 
 
+
+include(CTest)
+
+if(BUILD_TESTING)
+
+    add_executable(lexer_test
+        tests/test_lexer.cxx
+        lexer/lexer.cxx
+        file/file.cxx
+    )
+    
+    add_test(
+        NAME lexer_test
+        COMMAND lexer_test
+    )
+
+
+    target_include_directories(lexer_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/lexer
+        ${CMAKE_CURRENT_SOURCE_DIR}/file
+    )
+
+    
+endif()
