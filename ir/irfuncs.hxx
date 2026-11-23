@@ -107,6 +107,9 @@ public:
         IRType type 
     );
 
+    IRValue emitAlloc(IRValue size);
+    void emitFree(IRValue pointer);
+
     private:
     void ensureBlockOpen();
 

@@ -1,16 +1,18 @@
 #include "parser.hxx"
 
+
 bool parser::isHeapAllocationDeclaration() const
 {
-    if (current >= tokens->size() ||
-        (*tokens)[current].TokenType != tokenType::New)
+    if (
+        current >= tokens->size() ||
+        (*tokens)[current].TokenType != tokenType::New
+    )
     {
         return false;
     }
 
-    unsigned long look = current + 1;
+    std::size_t look = current + 1;
 
-    //пропускаємо ptr, ptr, ptr...
     while (
         look < tokens->size() &&
         (*tokens)[look].TokenType == tokenType::ptr
@@ -22,7 +24,6 @@ bool parser::isHeapAllocationDeclaration() const
     if (look >= tokens->size())
         return false;
 
-    //перевіряємо базовий тип
     switch ((*tokens)[look].TokenType)
     {
         case tokenType::INTEGERTYPE:
@@ -37,9 +38,18 @@ bool parser::isHeapAllocationDeclaration() const
             return false;
     }
 
-    //якщо після типу йде ім'я  це heap декларація, а не new expression
-    return look < tokens->size() &&
-           (*tokens)[look].TokenType == tokenType::IDENTIFIER;
+    // Optional reference marker.
+    if (
+        look < tokens->size() &&
+        (*tokens)[look].TokenType == tokenType::ref
+    )
+    {
+        ++look;
+    }
+
+    return
+        look < tokens->size() &&
+        (*tokens)[look].TokenType == tokenType::IDENTIFIER;
 }
 
 

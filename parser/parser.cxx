@@ -117,27 +117,31 @@ ExprPtr parser::call()
     return expr;
 }
 
+
 ExprPtr parser::unary()
 {
+    
     if (match(tokenType::New))
     {
-        token type;
+        typeinfo allocatedType = parseType();
 
+        
         if (
-            match(tokenType::INTEGERTYPE) ||
-            match(tokenType::FLOATTYPE) ||
-            match(tokenType::CHARTYPE) ||
-            match(tokenType::BOOLTYPE)
-        )
-        {
-            type = previous();
-        }
-        else
-        {
-            throw std::runtime_error(
-                "Expected type after new"
-            );
-        }
+    allocatedType.baseType.TokenType == tokenType::VOIDTYPE &&
+    allocatedType.pointerDepth == 0
+    )
+    {
+    throw std::runtime_error(
+        "Cannot allocate an object of type void"
+    );
+    }
+
+    if (allocatedType.isref)
+    {
+    throw std::runtime_error(
+        "Cannot allocate a reference"
+    );
+    }
 
         consume(tokenType::leftparen);
 
@@ -145,25 +149,27 @@ ExprPtr parser::unary()
 
         consume(tokenType::rightparen);
 
-        auto expr = std::make_unique<newExpr>();
+        auto result = std::make_unique<newExpr>();
 
-        expr->type = type;
-        expr->initializer = std::move(initializer);
+        result->allocatedType = allocatedType;
+        result->initializer = std::move(initializer);
 
-        return expr;
+        return result;
     }
 
+    
     if (match(tokenType::Delete))
     {
         ExprPtr operand = unary();
 
-        auto expr = std::make_unique<delExpr>();
+        auto result = std::make_unique<delExpr>();
 
-        expr->operand = std::move(operand);
+        result->operand = std::move(operand);
 
-        return expr;
+        return result;
     }
 
+    
     if (
         match(tokenType::NOT) ||
         match(tokenType::MINUS) ||
@@ -176,16 +182,17 @@ ExprPtr parser::unary()
 
         ExprPtr operand = unary();
 
-        auto expr = std::make_unique<UnaryExpr>();
+        auto result = std::make_unique<UnaryExpr>();
 
-        expr->op = op;
-        expr->right = std::move(operand);
+        result->op = op;
+        result->right = std::move(operand);
 
-        return expr;
+        return result;
     }
 
     return call();
 }
+
 
 ExprPtr parser::factor() {
     ExprPtr expr = unary();

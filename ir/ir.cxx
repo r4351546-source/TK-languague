@@ -387,6 +387,70 @@ std::optional<IRValue> IRBuilder::emit(IRcode opcode,
 
             break;
         }
+
+
+case IRcode::ALLOC:
+{
+    if (operands.size() != 1)
+    {
+        throw std::invalid_argument(
+            "IRBuilder: ALLOC requires one size operand"
+        );
+    }
+
+    if (
+        operands[0].type != IRType::I64 &&
+        operands[0].type != IRType::I32 &&
+        operands[0].type != IRType::I16 &&
+        operands[0].type != IRType::I8
+    )
+    {
+        throw std::invalid_argument(
+            "IRBuilder: ALLOC size must be an integer"
+        );
+    }
+
+    if (
+        !resultType.has_value() ||
+        *resultType != IRType::PTR
+    )
+    {
+        throw std::invalid_argument(
+            "IRBuilder: ALLOC must return PTR"
+        );
+    }
+
+    result = createValue(IRType::PTR);
+    break;
+}
+
+case IRcode::FREE:
+{
+    if (operands.size() != 1)
+    {
+        throw std::invalid_argument(
+            "IRBuilder: FREE requires one operand"
+        );
+    }
+
+    if (operands[0].type != IRType::PTR)
+    {
+        throw std::invalid_argument(
+            "IRBuilder: FREE requires PTR"
+        );
+    }
+
+    if (resultType.has_value())
+    {
+        throw std::invalid_argument(
+            "IRBuilder: FREE cannot return a value"
+        );
+    }
+
+    break;
+}
+
+
                     case IRcode::LOAD:
                     {
                     if (operands.size() != 1)
@@ -597,7 +661,63 @@ bool IRBuilder::verifyFunction(
 
             // Verify return instructions.
             if (instruction.opcode == IRcode::RET)
+            {   
+                switch (instruction.opcode)
+{
+            case IRcode::ALLOC:
+         {
+            if (
+            instruction.operands.size() != 1 ||
+            !instruction.result.has_value()
+            )
             {
+            return false;
+            }
+
+            const IRType sizeType =
+            instruction.operands[0].type;
+
+            if (
+            sizeType != IRType::I8 &&
+            sizeType != IRType::I16 &&
+            sizeType != IRType::I32 &&
+            sizeType != IRType::I64
+            )
+            {
+            return false;
+            }
+
+            if (instruction.result->type != IRType::PTR)
+            return false;
+
+            break;
+    }
+
+    case IRcode::FREE:
+    {
+        if (
+            instruction.operands.size() != 1 ||
+            instruction.result.has_value()
+        )
+        {
+            return false;
+        }
+
+        if (
+            instruction.operands[0].type != IRType::PTR
+        )
+        {
+            return false;
+        }
+
+    
+        break;
+                
+    }
+
+                default:
+                break;
+                }
                 if (
                     function.returnType == IRType::VOID
                 )

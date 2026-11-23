@@ -27,6 +27,9 @@ enum class IRcode {
     LOAD,
     STORE,
 
+    ALLOC,
+    FREE,
+
     CALL,
     RET,
 

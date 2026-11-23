@@ -331,6 +331,95 @@ Type analyzer::analyzeExpression(const Expr& expression)
         return analyzeExpression(*grouping->expression);
     }
 
+
+
+    if (const auto* allocation =
+    dynamic_cast<const newExpr*>(&expression))
+    {
+    if (!allocation->initializer)
+    {
+        reportError("new expression has no initializer");
+        return invalid;
+    }
+
+    Type allocatedType = resolvetype(
+        allocation->allocatedType
+    );
+
+    if (
+        allocatedType.kind == typekind::INVALID ||
+        allocatedType.kind == typekind::VOID ||
+        allocatedType.isRef
+    )
+    {
+        reportError("Invalid allocation type");
+        return invalid;
+    }
+
+    Type initializerType =
+        analyzeExpression(*allocation->initializer);
+
+    if (initializerType.kind == typekind::INVALID)
+        return invalid;
+
+    if (!tktype::isCompatible(
+        allocatedType,
+        initializerType
+    ))
+    {
+        reportError(
+            "Allocation initializer type mismatch"
+        );
+
+        return invalid;
+    }
+
+    return Type::pointerTo(allocatedType);
+    }
+    
+    
+
+    if (const auto* deletion = dynamic_cast<const delExpr*>(&expression))
+    {
+    if (!deletion->operand)
+    {
+        reportError("delete expression has no operand");
+        return invalid;
+    }
+
+    Type operandType =
+        analyzeExpression(*deletion->operand);
+
+    if (operandType.kind == typekind::INVALID)
+        return invalid;
+
+    // delete nullptr is a no-op.
+    if (
+        operandType.kind == typekind::NULLPTR &&
+        !operandType.isPtr
+    )
+    {
+        return Type{typekind::VOID};
+    }
+
+    if (
+        !operandType.isPtr ||
+        operandType.isRef ||
+        !operandType.pointeeType
+    )
+    {
+        reportError(
+            "delete requires a pointer operand"
+        );
+
+        return invalid;
+    }
+
+    return Type{typekind::VOID};
+    }
+
+
+
     
     if (const auto* unary =
         dynamic_cast<const UnaryExpr*>(&expression))
@@ -941,28 +1030,23 @@ bool analyzer::analyzeVariable(
 
     if (variableType.kind == typekind::INVALID)
     {
-        reportError(
-            "Invalid type for variable: " + name
-        );
-
+        reportError("Invalid type for variable: " + name);
         return false;
     }
 
-    if (variableType.kind == typekind::VOID)
+    if (
+        variableType.kind == typekind::VOID &&
+        !variableType.isPtr &&
+        !variableType.isRef
+    )
     {
-        reportError(
-            "Variable cannot have void type: " + name
-        );
-
+        reportError("Variable cannot have void type: " + name);
         return false;
     }
 
     if (symbols.lookupcurrent(name))
     {
-        reportError(
-            "Variable already declared: " + name
-        );
-
+        reportError("Variable already declared: " + name);
         return false;
     }
 
@@ -975,16 +1059,68 @@ bool analyzer::analyzeVariable(
         return false;
     }
 
-    // Analyze initializer BEFORE declaring the variable.
-    if (variable.initializer)
+    if (variable.isHeapAllocated)
+    {
+        if (
+            !variableType.isPtr ||
+            !variableType.pointeeType
+        )
+        {
+            reportError(
+                "Heap variable must have a pointer type: " + name
+            );
+
+            return false;
+        }
+
+        if (!variable.initializer)
+        {
+            reportError(
+                "Heap allocation requires an initializer: " + name
+            );
+
+            return false;
+        }
+
+        Type allocatedType = *variableType.pointeeType;
+
+        if (
+            allocatedType.kind == typekind::VOID &&
+            !allocatedType.isPtr
+        )
+        {
+            reportError(
+                "Cannot allocate an object of type void"
+            );
+
+            return false;
+        }
+
+        Type initializerType =
+            analyzeExpression(*variable.initializer);
+
+        if (initializerType.kind == typekind::INVALID)
+            return false;
+
+        if (!tktype::isCompatible(
+            allocatedType,
+            initializerType
+        ))
+        {
+            reportError(
+                "Heap initializer type mismatch: " + name
+            );
+
+            return false;
+        }
+    }
+    else if (variable.initializer)
     {
         Type initializerType =
             analyzeExpression(*variable.initializer);
 
         if (initializerType.kind == typekind::INVALID)
-        {
             return false;
-        }
 
         if (!tktype::isCompatible(
             variableType,
@@ -993,20 +1129,15 @@ bool analyzer::analyzeVariable(
         {
             reportError(
                 "Variable initialization type mismatch: expected " +
-                std::string(
-                    tktype::typeToString(variableType)
-                ) +
+                tktype::typeToString(variableType) +
                 ", got " +
-                std::string(
-                    tktype::typeToString(initializerType)
-                )
+                tktype::typeToString(initializerType)
             );
 
             return false;
         }
     }
 
-    // Declare only after successful validation.
     symbol variableSymbol(
         name,
         symbolKind::VARIABLE,
@@ -1025,6 +1156,8 @@ bool analyzer::analyzeVariable(
 
     return true;
 }
+
+
 
 
 bool analyzer::entryPoint(const program& ast)

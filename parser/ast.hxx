@@ -41,13 +41,19 @@ struct assignmentExpr : Expr {
     ExprPtr value;
 };
 
+struct typeinfo {
+    token baseType;
+
+    unsigned pointerDepth = 0;
+    bool isref = false;
+};
 struct callExpr : Expr {
     ExprPtr callee;
     std::vector<ExprPtr> arguments;
 };
 
 struct newExpr : Expr {
-    token type;
+    typeinfo allocatedType;
     ExprPtr initializer;
 };
 
@@ -56,14 +62,6 @@ struct delExpr : Expr {
 };
 
 //instructs
-
-
-struct typeinfo {
-    token baseType;
-
-    unsigned pointerDepth = 0;
-    bool isref = false;
-};
 
 
 struct stmt {
