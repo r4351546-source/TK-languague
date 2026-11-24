@@ -496,38 +496,6 @@ ExprPtr parser::logicalOr()
 — start of statement parsing functions —
 */
 
-stmtptr parser::usedecl() {
-
-    std::vector<token> path;
-
-    path.push_back(consume(tokenType::IDENTIFIER));
-
-    while (match(tokenType::scope)) {
-        path.push_back(consume(tokenType::IDENTIFIER));
-    }
-
-    consume(tokenType::semicolon);
-
-    auto stmt = std::make_unique<usestmt>();
-
-    stmt->path = std::move(path);
-
-    return stmt;
-}
-
-
-stmtptr parser::incdecl() {
-
-    token path = consume(tokenType::STRING_LITERAL);
-
-    consume(tokenType::semicolon);
-
-    auto stmt = std::make_unique<incstmt>();
-
-    stmt->path = path;
-
-    return stmt;
-}
 
 stmtptr parser::expressionStatement() {
     ExprPtr expr = expression();
@@ -747,23 +715,39 @@ stmtptr parser::variableDeclaration() {
 
 
 
-stmtptr parser::declaration() {
-    if (isHeapAllocationDeclaration())
+stmtptr parser::declaration()
+{
+    // SourceLoader must expand all file directives.
+    if (
+        check(tokenType::USE) ||
+        check(tokenType::INC)
+    )
     {
-    advance();
-    return heapAllocationDeclaration();
-    }   
-
-    if (match(tokenType::USE)) return usedecl();
-    if (match(tokenType::INC)) return incdecl();
-    if (match(tokenType::FNTYPE)) return functionDeclaration();
-    
-    if (isTypeStart()
-        || check(tokenType::Const)
-    ) {
-    return variableDeclaration();
+        throw std::runtime_error(
+            "Unexpanded file directive. "
+            "Use SourceLoader::load() before parsing."
+        );
     }
 
+    if (isHeapAllocationDeclaration())
+    {
+        advance();
+
+        return heapAllocationDeclaration();
+    }
+
+    if (match(tokenType::FNTYPE))
+    {
+        return functionDeclaration();
+    }
+
+    if (
+        isTypeStart() ||
+        check(tokenType::Const)
+    )
+    {
+        return variableDeclaration();
+    }
 
     return statement();
 }

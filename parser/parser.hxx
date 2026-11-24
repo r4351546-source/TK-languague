@@ -34,9 +34,7 @@ private:
     stmtptr forStatement();     //done
     stmtptr returnStatement();  //done
     stmtptr expressionStatement();//done
-    stmtptr usedecl();          //done
-    stmtptr incdecl();          //done
-
+    
     // Expressions
     ExprPtr expression();   //done
     ExprPtr assignment();   //done

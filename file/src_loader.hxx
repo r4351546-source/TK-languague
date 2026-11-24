@@ -1,6 +1,7 @@
 
 #pragma once
 
+
 #include "../lexer/lexer.hxx"
 
 #include <filesystem>
@@ -11,6 +12,7 @@
 class SourceLoader {
 private:
     using Path = std::filesystem::path;
+    static constexpr size_t MAX_INCLUDE_DEPTH = 256;
 
     void expandFile(
         const Path& path,

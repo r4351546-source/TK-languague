@@ -16,7 +16,7 @@ std::filesystem::path SourceLoader::normalizePath(
 }
 
 
-// Decode "file.tk" into file.tk.
+
 std::string SourceLoader::decodeStringLiteral(
     const std::string& literal
 )
@@ -97,17 +97,17 @@ SourceLoader::Path SourceLoader::resolveStandardLibrary(
     std::size_t& index
 )
 {
+    std::vector<std::string> components;
+
     if (
         index >= tokens.size() ||
         tokens[index].TokenType != tokenType::IDENTIFIER
     )
     {
         throw std::runtime_error(
-            "Expected standard library name after use"
+            "Expected library namespace after use"
         );
     }
-
-    std::vector<std::string> components;
 
     components.push_back(tokens[index++].lexeme);
 
@@ -124,32 +124,29 @@ SourceLoader::Path SourceLoader::resolveStandardLibrary(
         )
         {
             throw std::runtime_error(
-                "Expected module name after ::"
+                "Expected library name after ::"
             );
         }
 
         components.push_back(tokens[index++].lexeme);
     }
 
-    if (components.size() < 2 || components.front() != "tklib")
+    if (
+        components.size() != 2 ||
+        components[0] != "tklib"
+    )
     {
         throw std::runtime_error(
-            "Unknown standard library namespace"
+            "Invalid standard library path"
         );
     }
 
     Path result = standardLibraryRoot();
 
-    for (std::size_t i = 1; i < components.size(); ++i)
-    {
-        result /= components[i];
-    }
-
-    result += ".tk";
+    result /= components[1] + ".tk";
 
     return result;
 }
-
 
 // Recursively expand source files.
 void SourceLoader::expandFile(
@@ -159,9 +156,17 @@ void SourceLoader::expandFile(
     std::vector<token>& output
 )
 {
+    if (includeStack.size() >= MAX_INCLUDE_DEPTH)
+    {
+        throw std::runtime_error(
+            "Maximum include depth exceeded: " +
+            path.string()
+        );
+    }
+
     Path absolutePath = normalizePath(path);
 
-    // Detect recursive include cycles.
+    // Detect circular dependencies.
     if (
         std::find(
             includeStack.begin(),
@@ -171,7 +176,7 @@ void SourceLoader::expandFile(
     )
     {
         throw std::runtime_error(
-            "Circular include detected: " +
+            "Circular dependency detected: " +
             absolutePath.string()
         );
     }
@@ -198,7 +203,12 @@ void SourceLoader::expandFile(
             tokens[i].TokenType != tokenType::eof
         )
         {
-            // inc "relative/file.tk";
+            /*
+             * INC
+             *
+             * inc "file.tk";
+             */
+
             if (tokens[i].TokenType == tokenType::INC)
             {
                 ++i;
@@ -209,7 +219,7 @@ void SourceLoader::expandFile(
                 )
                 {
                     throw std::runtime_error(
-                        "Expected string path after inc"
+                        "Expected string literal after inc"
                     );
                 }
 
@@ -245,7 +255,12 @@ void SourceLoader::expandFile(
                 continue;
             }
 
-            // use tklib::ios;
+            /*
+             * USE
+             *
+             * use tklib::ios;
+             */
+
             if (tokens[i].TokenType == tokenType::USE)
             {
                 ++i;
@@ -267,29 +282,41 @@ void SourceLoader::expandFile(
 
                 ++i;
 
-                Path normalizedTarget = normalizePath(target);
+                Path normalizedTarget =
+                    normalizePath(target);
 
-                // Standard modules are imported only once.
-                if (importedModules.insert(normalizedTarget).second)
+                //already successfully imported?
+                if (
+                    importedModules.find(normalizedTarget) !=
+                    importedModules.end()
+                )
                 {
-                    expandFile(
-                        normalizedTarget,
-                        includeStack,
-                        importedModules,
-                        output
-                    );
+                    continue;
                 }
+
+                // Expand first. Register only after success.
+                expandFile(
+                    normalizedTarget,
+                    includeStack,
+                    importedModules,
+                    output
+                );
+
+                importedModules.insert(normalizedTarget);
 
                 continue;
             }
 
+            
             output.push_back(tokens[i]);
+
             ++i;
         }
     }
     catch (...)
     {
         includeStack.pop_back();
+
         throw;
     }
 
@@ -297,13 +324,14 @@ void SourceLoader::expandFile(
 }
 
 
-
 std::vector<token> SourceLoader::load(
     const Path& entryFile
 )
 {
     std::vector<token> output;
+
     std::vector<Path> includeStack;
+
     std::unordered_set<Path> importedModules;
 
     expandFile(
