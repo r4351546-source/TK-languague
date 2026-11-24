@@ -1,57 +1,48 @@
 #include "parser.hxx"
+#include <stdexcept>
 
-
-bool parser::isHeapAllocationDeclaration() const
+stmtptr parser::heapAllocationDeclaration()
 {
+    typeinfo allocatedType = parseType();
+
+    if (allocatedType.isref)
+    {
+        throw std::runtime_error(
+            "Cannot allocate a reference"
+        );
+    }
+
     if (
-        current >= tokens->size() ||
-        (*tokens)[current].TokenType != tokenType::New
+        allocatedType.baseType.TokenType == tokenType::VOIDTYPE &&
+        allocatedType.pointerDepth == 0
     )
     {
-        return false;
+        throw std::runtime_error(
+            "Cannot allocate void"
+        );
     }
 
-    std::size_t look = current + 1;
+    token name = consume(tokenType::IDENTIFIER);
 
-    while (
-        look < tokens->size() &&
-        (*tokens)[look].TokenType == tokenType::ptr
-    )
-    {
-        ++look;
-    }
+    consume(tokenType::ASSIGN);
 
-    if (look >= tokens->size())
-        return false;
+    ExprPtr initializer = expression();
 
-    switch ((*tokens)[look].TokenType)
-    {
-        case tokenType::INTEGERTYPE:
-        case tokenType::FLOATTYPE:
-        case tokenType::CHARTYPE:
-        case tokenType::BOOLTYPE:
-        case tokenType::VOIDTYPE:
-            ++look;
-            break;
+    consume(tokenType::semicolon);
 
-        default:
-            return false;
-    }
+    // Heap allocation завжди повертає pointer.
+    ++allocatedType.pointerDepth;
 
-    // Optional reference marker.
-    if (
-        look < tokens->size() &&
-        (*tokens)[look].TokenType == tokenType::ref
-    )
-    {
-        ++look;
-    }
+    auto declaration = std::make_unique<varDeclStmt>();
 
-    return
-        look < tokens->size() &&
-        (*tokens)[look].TokenType == tokenType::IDENTIFIER;
+    declaration->type = allocatedType;
+    declaration->name = name;
+    declaration->initializer = std::move(initializer);
+
+    declaration->isHeapAllocated = true;
+
+    return declaration;
 }
-
 
 stmtptr parser::heapAllocationDeclaration()
 {

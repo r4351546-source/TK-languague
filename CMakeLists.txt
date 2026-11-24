@@ -10,6 +10,9 @@ project(tklc
 
 add_executable(tklc
 
+    file/source_loader.cxx
+
+    ir/allocfree.cxx
     ir/ir.cxx
     lexer/lexer.cxx
     parser/memory.cxx
