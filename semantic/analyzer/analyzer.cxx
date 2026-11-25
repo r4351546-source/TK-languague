@@ -7,19 +7,28 @@ void analyzer::reportError(const std::string& message)
     errorCount++;
 }
 
+bool analyzer::isBool(Type type) const
+{
+    type = type.valueType();
+
+    return !type.isPtr &&
+           !type.isRef &&
+           type.kind == typekind::BOOL;
+}
+
 
 bool analyzer::isNumeric(Type type) const
 {
-    switch (type.kind)
-    {
-        case typekind::INTEGER:
-        case typekind::FLOAT:
-            return true;
+    type = type.valueType();
 
-        default:
-            return false;
-    }
+    return !type.isPtr &&
+           !type.isRef &&
+           (
+               type.kind == typekind::INTEGER ||
+               type.kind == typekind::FLOAT
+           );
 }
+
 
 bool analyzer::analyzeStatement(const stmt& statement)
 {

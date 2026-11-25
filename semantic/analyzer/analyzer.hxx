@@ -26,6 +26,7 @@ private:
     bool analyzeVariable(const varDeclStmt& variable);          //done      14th November 2026
     bool isNumeric(Type type) const;                            //done      13th November 2026
     bool entryPoint(const program &ast);                        //done      16th November 2026 
+    bool isBool(Type type) const;
 
     Type resolvetype(const typeinfo& type);                     //done      14th November 2026
 
