@@ -9,6 +9,7 @@ enum class typekind {
     CHAR,
     BOOL,
     VOID,
+    STRING,
     NULLPTR,
     INVALID
 };

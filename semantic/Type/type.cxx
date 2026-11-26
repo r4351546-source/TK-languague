@@ -18,6 +18,9 @@ std::string tktype::typeToString(const Type& type) {
 
     switch (type.kind) {
 
+        case typekind::STRING:
+            return "string";
+
         case typekind::INTEGER:
             return "int";
 

@@ -304,6 +304,9 @@ Type analyzer::analyzeExpression(const Expr& expression)
         switch (literal->value.TokenType)
         {
             
+            case tokenType::STRING_LITERAL:
+                return Type{ typekind::STRING };
+
             case tokenType::INTEGER_LITERAL:
                 return Type{ typekind::INTEGER };
 
