@@ -7,6 +7,31 @@ void analyzer::reportError(const std::string& message)
     errorCount++;
 }
 
+bool analyzer::isLValue(
+    const Expr& expression
+) const
+{
+    if (dynamic_cast<const VariableExpr*>(&expression))
+        return true;
+
+    if (const auto* unary =
+        dynamic_cast<const UnaryExpr*>(&expression))
+    {
+        return unary->op.TokenType == tokenType::MULTIPLY;
+    }
+
+    if (const auto* grouping =
+        dynamic_cast<const groupingExpr*>(&expression))
+    {
+        return grouping->expression &&
+               isLValue(*grouping->expression);
+    }
+
+    return false;
+}
+
+
+
 bool analyzer::isBool(Type type) const
 {
     type = type.valueType();
@@ -327,7 +352,7 @@ Type analyzer::analyzeExpression(const Expr& expression)
         return found->type;
     }
 
-    // 3. groupingExpr
+    
     if (const auto* grouping =
         dynamic_cast<const groupingExpr*>(&expression))
     {
@@ -472,6 +497,66 @@ Type analyzer::analyzeExpression(const Expr& expression)
 
                 return invalid;
             }
+            case tokenType::PLUS:
+            {
+            if (isNumeric(operand))
+            return operand.valueType();
+
+            reportError(
+                "Unary '+' requires a numeric operand"
+            );
+
+                return invalid;
+            }
+
+            case tokenType::ref:
+            {   
+    if (!isLValue(*unary->right))
+    {
+            reportError(
+                "Unary '&' requires an lvalue operand"
+            );
+
+            return invalid;
+            }
+
+            return Type::pointerTo(
+            operand.valueType()
+            );
+    }
+
+            case tokenType::MULTIPLY:
+            {
+    Type pointerType = operand.valueType();
+
+    if (
+        !pointerType.isPtr ||
+        !pointerType.pointeeType
+    )
+    {
+        reportError(
+            "Dereference requires a pointer operand"
+        );
+
+        return invalid;
+    }
+
+    Type pointee = *pointerType.pointeeType;
+
+    if (
+        pointee.kind == typekind::VOID &&
+        !pointee.isPtr
+    )
+    {
+        reportError(
+            "Cannot dereference void pointer"
+        );
+
+        return invalid;
+    }
+
+    return pointee.valueType();
+    }
 
             default:
                 reportError("Unknown unary operator");
@@ -498,13 +583,11 @@ Type analyzer::analyzeExpression(const Expr& expression)
             return invalid;
         }
 
-        const bool leftNumeric =
-            left.kind == typekind::INTEGER ||
-            left.kind == typekind::FLOAT;
+        Type leftValue = left.valueType();
+        Type rightValue = right.valueType();
 
-        const bool rightNumeric =
-            right.kind == typekind::INTEGER ||
-            right.kind == typekind::FLOAT;
+        const bool leftNumeric = isNumeric(leftValue);
+        const bool rightNumeric = isNumeric(rightValue);
 
         switch (binary->op.TokenType)
         {

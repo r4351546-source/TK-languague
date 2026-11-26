@@ -27,6 +27,7 @@ private:
     bool isNumeric(Type type) const;                            //done      13th November 2026
     bool entryPoint(const program &ast);                        //done      16th November 2026 
     bool isBool(Type type) const;
+    bool isLValue(const Expr& expression) const;
 
     Type resolvetype(const typeinfo& type);                     //done      14th November 2026
 
