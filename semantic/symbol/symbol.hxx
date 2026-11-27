@@ -35,4 +35,7 @@ struct symbol {
     std::vector<Type> parameterTypes;
     bool isconst = false;
 
+    unsigned long scopeDepth = 0;
+
+    unsigned long referentScopeDepth = 0;
 };

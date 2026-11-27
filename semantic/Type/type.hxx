@@ -43,10 +43,24 @@ struct Type {
 
         return result;
     }
+    bool isReference() const {
+        return isRef && pointeeType != nullptr;
+    }
+
+    bool isValidReference() const {
+    if (!isRef || !pointeeType)
+        return false;
+
+    Type referred = pointeeType->valueType();
+
+    return referred.kind != typekind::VOID &&
+           referred.kind != typekind::INVALID &&
+           !referred.isRef;
+    }
 
     Type valueType() const {
         if (isRef && pointeeType) {
-            return *pointeeType;
+            return pointeeType->valueType();
         }
 
         return *this;
@@ -84,27 +98,8 @@ namespace tktype {
 
     std::string typeToString(const Type& type);
 
-    inline bool isCompatible(
+    bool isCompatible(
         const Type& expected,
         const Type& actual
-    ) {
-        if (
-            actual.kind == typekind::NULLPTR &&
-            !actual.isPtr &&
-            !actual.isRef
-        ) {
-            return expected.isPtr;
-        }
-
-        if (
-            expected.kind == typekind::NULLPTR &&
-            !expected.isPtr &&
-            !expected.isRef
-        ) {
-            return actual.isPtr;
-        }
-
-        return expected == actual;
-    }
-
+    );
 }

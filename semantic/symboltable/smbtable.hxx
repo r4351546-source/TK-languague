@@ -28,4 +28,9 @@ public:
 
     symbol* lookupcurrent(const std::string& name);
 
+    unsigned long currentScopeDepth() const
+    {
+        return scopes.empty() ? 0 : scopes.size() - 1;
+    }
+
 };

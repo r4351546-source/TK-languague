@@ -272,15 +272,54 @@ bool analyzer::analyzeStatement(const stmt& statement)
 
             return false;
         }
+                if (currentReturnType.isRef)
+                {
+            if (!isLValue(*returnNode->value))
+        {
+        reportError(
+            "Function returning reference must return an lvalue"
+        );
+
+        return false;
+        }
+
+    const Expr* target = returnNode->value.get();
+
+    while (const auto* grouping =
+        dynamic_cast<const groupingExpr*>(target))
+    {
+        target = grouping->expression.get();
+    }
+
+    if (const auto* variable =
+        dynamic_cast<const VariableExpr*>(target))
+    {
+        symbol* found =
+            symbols.lookup(variable->name.lexeme);
+
+        if (
+            found &&
+            found->kind == symbolKind::VARIABLE &&
+            found->scopeDepth > 0
+        )
+        {
+            reportError(
+                "Cannot return reference to local variable"
+            );
+
+            return false;
+        }
+    }
+    }
 
             if (!tktype::isCompatible(currentReturnType, valueType))
-{
-    reportError(
+            {
+        reportError(
         "return type mismatch: expected " +
         std::string(tktype::typeToString(currentReturnType)) +
         ", got " +
         std::string(tktype::typeToString(valueType))
-    );
+        );
 
     return false;
 }
@@ -530,6 +569,7 @@ Type analyzer::analyzeExpression(const Expr& expression)
 
             case tokenType::MULTIPLY:
             {
+                
     Type pointerType = operand.valueType();
 
     if (
@@ -689,8 +729,7 @@ if (const auto* assignment =
     }
 
     // Визначаємо тип цілі присвоєння.
-    Type targetType =
-        analyzeExpression(*assignment->target);
+    Type targetType = analyzeExpression(*assignment->target).valueType();
 
     if (targetType.kind == typekind::INVALID)
         return invalid;
@@ -740,8 +779,7 @@ if (const auto* assignment =
         }
     }
 
-    Type valueType =
-        analyzeExpression(*assignment->value);
+     Type valueType = analyzeExpression(*assignment->value).valueType();
 
     if (valueType.kind == typekind::INVALID)
         return invalid;
@@ -1104,6 +1142,10 @@ Type analyzer::resolvetype(const typeinfo& type)
         result = Type::referenceTo(result);
     }
 
+    if (result.isRef && !result.isValidReference()) {
+    return Type{typekind::INVALID};
+    }
+
     return result;
 }
 
@@ -1209,36 +1251,119 @@ bool analyzer::analyzeVariable(
             return false;
         }
     }
-    else if (variable.initializer)
+    else if (variable.initializer) {
+    
+    if (variableType.isRef)
     {
-        Type initializerType =
-            analyzeExpression(*variable.initializer);
-
-        if (initializerType.kind == typekind::INVALID)
-            return false;
-
-        if (!tktype::isCompatible(
-            variableType,
-            initializerType
-        ))
+        if (!isLValue(*variable.initializer))
         {
             reportError(
-                "Variable initialization type mismatch: expected " +
-                tktype::typeToString(variableType) +
-                ", got " +
-                tktype::typeToString(initializerType)
+                "Reference must bind to an lvalue: " + name
             );
 
+            const Expr* target = variable.initializer.get();
+
+while (const auto* grouping =
+    dynamic_cast<const groupingExpr*>(target))
+{
+    if (!grouping->expression)
+        return false;
+
+    target = grouping->expression.get();
+}
+
+if (const auto* targetVariable =
+    dynamic_cast<const VariableExpr*>(target))
+{
+    symbol* targetSymbol =
+        symbols.lookup(targetVariable->name.lexeme);
+
+    if (!targetSymbol)
+    {
+        reportError(
+            "Reference target does not exist"
+        );
+
+        return false;
+    }
+
+    size_t targetLifetime =
+        targetSymbol->type.isRef
+            ? targetSymbol->referentScopeDepth
+            : targetSymbol->scopeDepth;
+
+    if (targetLifetime >
+        symbols.currentScopeDepth())
+    {
+        reportError(
+            "Reference cannot outlive its target: " + name
+        );
+
+        return false;
+    }
+
+            //передаєм lifetime через reference alias
+            //cаме тому ланцюжки int& b = a тоже перевіряються
+        }
             return false;
         }
     }
 
+    Type initializerType =
+        analyzeExpression(*variable.initializer);
+
+    if (initializerType.kind == typekind::INVALID)
+        return false;
+
+    
+    Type expectedType = variableType.valueType();
+    Type actualType = initializerType.valueType();
+
+    if (expectedType != actualType)
+    {
+        reportError(
+            "Variable initialization type mismatch: expected " +
+            tktype::typeToString(expectedType) +
+            ", got " +
+            tktype::typeToString(actualType)
+        );
+
+        return false;
+    }
+    }
     symbol variableSymbol(
         name,
         symbolKind::VARIABLE,
         variableType,
         variable.isconst
     );
+
+    if (variableType.isRef)
+    {
+    const Expr* target =
+        variable.initializer.get();
+
+    while (const auto* grouping =
+        dynamic_cast<const groupingExpr*>(target))
+    {
+        target = grouping->expression.get();
+    }
+
+    if (const auto* targetVariable =
+        dynamic_cast<const VariableExpr*>(target))
+    {
+        symbol* targetSymbol =
+            symbols.lookup(targetVariable->name.lexeme);
+
+        if (targetSymbol)
+        {
+            variableSymbol.referentScopeDepth =
+                targetSymbol->type.isRef
+                    ? targetSymbol->referentScopeDepth
+                    : targetSymbol->scopeDepth;
+        }
+    }
+    }
 
     if (!symbols.declare(variableSymbol))
     {

@@ -14,18 +14,32 @@ void smbTable::exitscope() {
     }
 }
 
-bool smbTable::declare(const symbol& sym) {
-    if (scopes.empty()) {
+bool smbTable::declare(const symbol& sym)
+{
+    if (scopes.empty())
         return false;
-    }
 
     auto& currentScope = scopes.back();
 
+    symbol stored = sym;
+
+    stored.scopeDepth = scopes.size() - 1;
+
+    if (!stored.type.isRef)
+    {
+        stored.referentScopeDepth =
+            stored.scopeDepth;
+    }
+
     auto [it, inserted] =
-        currentScope.emplace(sym.name, sym);
+        currentScope.emplace(
+            stored.name,
+            std::move(stored)
+        );
 
     return inserted;
 }
+
 
 symbol* smbTable::lookupcurrent(const std::string& name) {
     if (scopes.empty()) {
